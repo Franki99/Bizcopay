@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String?  @unique
+  pin       String
+  role      Role     @default(PAYER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallet               Wallet?
+  nfcTokens            NfcToken[]
+  sentTransactions     Transaction[] @relation("Payer")
+  receivedTransactions Transaction[] @relation("Merchant")
+}
+
+enum Role {
+  PAYER
+  MERCHANT
+  ADMIN
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  balance   Decimal  @default(0) @db.Decimal(12, 2)
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model NfcToken {
+  id        String   @id @default(uuid())
+  uid       String   @unique
+  userId    String
+  label     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Transaction {
+  id            String            @id @default(uuid())
+  amount        Decimal           @db.Decimal(12, 2)
+  currency      String            @default("USD")
+  status        TransactionStatus @default(PENDING)
+  riskScore     RiskScore         @default(LOW)
+  payerId       String?
+  merchantId    String
+  nfcTokenUid   String?
+  description   String?
+  failureReason String?
+  expiresAt     DateTime
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  payer    User?    @relation("Payer", fields: [payerId], references: [id])
+  merchant User     @relation("Merchant", fields: [merchantId], references: [id])
+  fraudLog FraudLog?
+}
+
+enum TransactionStatus {
+  PENDING
+  AWAITING_PIN
+  APPROVED
+  FAILED
+  EXPIRED
+}
+
+enum RiskScore {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model FraudLog {
+  id            String    @id @default(uuid())
+  transactionId String    @unique
+  ruleTriggered String
+  riskScore     RiskScore
+  details       Json
+  createdAt     DateTime  @default(now())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+}

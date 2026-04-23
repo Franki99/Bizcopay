@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bizcopay-db
+    environment:
+      POSTGRES_USER: bizcopay
+      POSTGRES_PASSWORD: bizcopay
+      POSTGRES_DB: bizcopay
+    ports:
+      - "5433:5432"
+    volumes:
+      - bizcopay_data:/var/lib/postgresql/data
+
+volumes:
+  bizcopay_data:
