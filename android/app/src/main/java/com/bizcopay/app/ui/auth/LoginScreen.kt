@@ -77,5 +77,8 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
         TextButton(onClick = { navController.navigate(Screen.Register.route) }) {
             Text("Don't have an account? Register")
         }
+        TextButton(onClick = { navController.navigate(Screen.ResetPin.route) }) {
+            Text("Forgot PIN?")
+        }
     }
 }

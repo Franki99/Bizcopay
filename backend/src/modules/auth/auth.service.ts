@@ -1,10 +1,11 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { z } from 'zod'
-import { Role } from '@prisma/client'
+import { Role, OtpPurpose } from '@prisma/client'
 import { prisma } from '../../lib/prisma'
 import { env } from '../../config/env'
 import { AppError } from '../../middleware/error.middleware'
+import { verifyOtp } from '../otp/otp.service'
 
 export const registerSchema = z.object({
   name: z.string().min(2),
@@ -12,6 +13,7 @@ export const registerSchema = z.object({
   phone: z.string().optional(),
   pin: z.string().length(4).regex(/^\d+$/, 'PIN must be 4 digits'),
   role: z.nativeEnum(Role).default(Role.PAYER),
+  otpCode: z.string().length(6),
 })
 
 export const loginSchema = z.object({
@@ -19,7 +21,15 @@ export const loginSchema = z.object({
   pin: z.string().length(4),
 })
 
+export const resetPinSchema = z.object({
+  email: z.string().email(),
+  otpCode: z.string().length(6),
+  newPin: z.string().length(4).regex(/^\d+$/, 'PIN must be 4 digits'),
+})
+
 export async function register(data: z.infer<typeof registerSchema>) {
+  await verifyOtp(data.email, data.otpCode, OtpPurpose.REGISTER)
+
   const exists = await prisma.user.findUnique({ where: { email: data.email } })
   if (exists) throw new AppError(409, 'Email already registered')
 
@@ -48,6 +58,16 @@ export async function login(data: z.infer<typeof loginSchema>) {
   if (!valid) throw new AppError(401, 'Invalid credentials')
 
   return { user: sanitize(user), token: signToken(user.id, user.role) }
+}
+
+export async function resetPin(data: z.infer<typeof resetPinSchema>) {
+  await verifyOtp(data.email, data.otpCode, OtpPurpose.RESET_PIN)
+
+  const user = await prisma.user.findUnique({ where: { email: data.email } })
+  if (!user || !user.isActive) throw new AppError(404, 'User not found')
+
+  const hashedPin = await bcrypt.hash(data.newPin, 10)
+  await prisma.user.update({ where: { id: user.id }, data: { pin: hashedPin } })
 }
 
 export async function verifyPin(userId: string, pin: string): Promise<boolean> {

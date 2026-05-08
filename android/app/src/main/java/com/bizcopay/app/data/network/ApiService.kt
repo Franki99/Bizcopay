@@ -5,11 +5,17 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface ApiService {
+    @POST("api/otp/send")
+    suspend fun sendOtp(@Body body: SendOtpRequest): Response<MessageResponse>
+
     @POST("api/auth/register")
     suspend fun register(@Body body: RegisterRequest): Response<AuthResponse>
 
     @POST("api/auth/login")
     suspend fun login(@Body body: LoginRequest): Response<AuthResponse>
+
+    @POST("api/auth/reset-pin")
+    suspend fun resetPin(@Body body: ResetPinRequest): Response<MessageResponse>
 
     @GET("api/users/me")
     suspend fun getMe(): Response<AuthResponse>

@@ -96,3 +96,18 @@ model FraudLog {
 
   transaction Transaction @relation(fields: [transactionId], references: [id])
 }
+
+model OtpCode {
+  id        String     @id @default(uuid())
+  email     String
+  codeHash  String
+  purpose   OtpPurpose
+  expiresAt DateTime
+  used      Boolean    @default(false)
+  createdAt DateTime   @default(now())
+}
+
+enum OtpPurpose {
+  REGISTER
+  RESET_PIN
+}

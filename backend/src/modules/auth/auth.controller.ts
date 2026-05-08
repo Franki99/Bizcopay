@@ -20,3 +20,13 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     next(err)
   }
 }
+
+export async function resetPin(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = authService.resetPinSchema.parse(req.body)
+    await authService.resetPin(data)
+    res.json({ message: 'PIN reset successfully' })
+  } catch (err) {
+    next(err)
+  }
+}

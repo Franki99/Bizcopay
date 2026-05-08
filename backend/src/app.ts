@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit'
 import { env } from './config/env'
 import { errorHandler } from './middleware/error.middleware'
 import authRoutes from './modules/auth/auth.routes'
+import otpRoutes from './modules/otp/otp.routes'
 import userRoutes from './modules/users/user.routes'
 import walletRoutes from './modules/wallets/wallet.routes'
 import nfcRoutes from './modules/nfc/nfc.routes'
@@ -20,6 +21,7 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true })
 app.get('/health', (_req, res) => res.json({ status: 'ok' }))
 
 app.use('/api/auth', authRoutes)
+app.use('/api/otp', otpRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/wallets', walletRoutes)
 app.use('/api/nfc', nfcRoutes)
