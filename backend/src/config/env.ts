@@ -6,6 +6,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   CORS_ORIGIN: z.string().default('*'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  ML_SERVICE_URL: z.string().url().default('http://localhost:8000'),
 })
 
 const parsed = envSchema.safeParse(process.env)
