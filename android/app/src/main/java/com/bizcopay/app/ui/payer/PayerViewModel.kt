@@ -6,8 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.bizcopay.app.data.local.TokenManager
 import com.bizcopay.app.data.network.ApiClient
 import com.bizcopay.app.data.network.models.ApprovePinRequest
+import com.bizcopay.app.data.network.models.RegisterNfcTokenRequest
 import com.bizcopay.app.data.network.models.WalletResponse
+import com.bizcopay.app.data.nfc.NfcEventBus
 import com.bizcopay.app.data.socket.SocketManager
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -23,16 +26,29 @@ sealed class PayerState {
     data class Error(val message: String) : PayerState()
 }
 
+sealed class NfcRegistrationState {
+    object Idle : NfcRegistrationState()
+    object ReadingNfc : NfcRegistrationState()
+    data class Captured(val uid: String) : NfcRegistrationState()
+    object Registering : NfcRegistrationState()
+    data class Success(val label: String) : NfcRegistrationState()
+    data class Error(val message: String) : NfcRegistrationState()
+}
+
 class PayerViewModel(application: Application) : AndroidViewModel(application) {
     private val tokenManager = TokenManager(application)
     private val api = ApiClient.create(tokenManager)
     private var socketManager: SocketManager? = null
+    private var nfcReadJob: Job? = null
 
     private val _state = MutableStateFlow<PayerState>(PayerState.Idle)
     val state: StateFlow<PayerState> = _state
 
     private val _wallet = MutableStateFlow<WalletResponse?>(null)
     val wallet: StateFlow<WalletResponse?> = _wallet
+
+    private val _registrationState = MutableStateFlow<NfcRegistrationState>(NfcRegistrationState.Idle)
+    val registrationState: StateFlow<NfcRegistrationState> = _registrationState
 
     init {
         loadWallet()
@@ -79,7 +95,6 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
                 if (!response.isSuccessful) {
                     _state.value = PayerState.Error("Invalid PIN")
                 }
-                // Success/failure comes via socket event
             } catch (e: Exception) {
                 _state.value = PayerState.Error("Connection failed")
             }
@@ -88,8 +103,54 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
 
     fun reset() { _state.value = PayerState.Idle }
 
+    // ── NFC Token Registration ────────────────────────────────────────────────
+
+    fun startNfcRegistration() {
+        _registrationState.value = NfcRegistrationState.ReadingNfc
+        nfcReadJob = viewModelScope.launch {
+            NfcEventBus.uid.collect { uid ->
+                _registrationState.value = NfcRegistrationState.Captured(uid)
+                nfcReadJob?.cancel()
+            }
+        }
+    }
+
+    fun cancelNfcRegistration() {
+        nfcReadJob?.cancel()
+        _registrationState.value = NfcRegistrationState.Idle
+    }
+
+    fun registerToken(uid: String, label: String) {
+        viewModelScope.launch {
+            _registrationState.value = NfcRegistrationState.Registering
+            try {
+                val response = api.registerNfcToken(
+                    RegisterNfcTokenRequest(uid = uid, label = label.ifBlank { null })
+                )
+                if (response.isSuccessful) {
+                    _registrationState.value = NfcRegistrationState.Success(
+                        label.ifBlank { uid }
+                    )
+                } else {
+                    val code = response.code()
+                    val msg = if (code == 409) "This token is already registered"
+                              else "Registration failed"
+                    _registrationState.value = NfcRegistrationState.Error(msg)
+                }
+            } catch (e: Exception) {
+                _registrationState.value = NfcRegistrationState.Error("Cannot reach server")
+            }
+        }
+    }
+
+    fun resetRegistration() {
+        nfcReadJob?.cancel()
+        _registrationState.value = NfcRegistrationState.Idle
+    }
+
     override fun onCleared() {
         super.onCleared()
         socketManager?.disconnect()
+        nfcReadJob?.cancel()
     }
 }

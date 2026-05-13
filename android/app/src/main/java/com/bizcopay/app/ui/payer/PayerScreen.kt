@@ -20,6 +20,7 @@ import com.bizcopay.app.ui.navigation.Screen
 fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewModel()) {
     val state by viewModel.state.collectAsState()
     val wallet by viewModel.wallet.collectAsState()
+    val registrationState by viewModel.registrationState.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
 
     fun logout() {
@@ -41,16 +42,28 @@ fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewMo
         }
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
-            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(Modifier.height(24.dp))
+
+            // ── Wallet balance ────────────────────────────────────────────────
             wallet?.let {
-                Text("${it.currency} ${it.balance}", style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.primary)
+                Text(
+                    "${it.currency} ${it.balance}",
+                    style = MaterialTheme.typography.displaySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text("Available balance", style = MaterialTheme.typography.bodySmall)
             }
+
             Spacer(Modifier.height(40.dp))
 
+            // ── Payment state ─────────────────────────────────────────────────
             when (val s = state) {
                 is PayerState.Idle -> {
                     CircularProgressIndicator(strokeWidth = 2.dp)
@@ -84,9 +97,10 @@ fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewMo
                             )
                             Spacer(Modifier.height(16.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(onClick = { viewModel.reset() }, modifier = Modifier.weight(1f)) {
-                                    Text("Decline")
-                                }
+                                OutlinedButton(
+                                    onClick = { viewModel.reset() },
+                                    modifier = Modifier.weight(1f)
+                                ) { Text("Decline") }
                                 Button(
                                     onClick = { viewModel.submitPin(s.payment.transactionId, pin) },
                                     enabled = pin.length == 4,
@@ -98,8 +112,11 @@ fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewMo
                 }
 
                 is PayerState.Approved -> {
-                    Text("Payment Approved", style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        "Payment Approved",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                     Spacer(Modifier.height(8.dp))
                     Text("$${s.amount} deducted", style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(24.dp))
@@ -107,8 +124,11 @@ fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewMo
                 }
 
                 is PayerState.Failed -> {
-                    Text("Payment Failed", style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.error)
+                    Text(
+                        "Payment Failed",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
                     Spacer(Modifier.height(8.dp))
                     Text(s.reason, style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(24.dp))
@@ -120,6 +140,132 @@ fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewMo
                     Spacer(Modifier.height(16.dp))
                     Button(onClick = { viewModel.reset() }) { Text("OK") }
                 }
+            }
+
+            // ── NFC Token Registration (only visible when not handling a payment) ──
+            if (state is PayerState.Idle || state is PayerState.Error) {
+                Spacer(Modifier.height(40.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(24.dp))
+
+                NfcRegistrationSection(
+                    registrationState = registrationState,
+                    onStart = { viewModel.startNfcRegistration() },
+                    onCancel = { viewModel.cancelNfcRegistration() },
+                    onRegister = { uid, label -> viewModel.registerToken(uid, label) },
+                    onDone = { viewModel.resetRegistration() }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NfcRegistrationSection(
+    registrationState: NfcRegistrationState,
+    onStart: () -> Unit,
+    onCancel: () -> Unit,
+    onRegister: (uid: String, label: String) -> Unit,
+    onDone: () -> Unit,
+) {
+    Text("My NFC Devices", style = MaterialTheme.typography.titleMedium)
+    Spacer(Modifier.height(12.dp))
+
+    when (val rs = registrationState) {
+        is NfcRegistrationState.Idle -> {
+            Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) {
+                Text("Register NFC Ring / Card / Bracelet")
+            }
+        }
+
+        is NfcRegistrationState.ReadingNfc -> {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "Tap your NFC ring, card, or bracelet\nagainst the back of this phone",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    TextButton(onClick = onCancel) { Text("Cancel") }
+                }
+            }
+        }
+
+        is NfcRegistrationState.Captured -> {
+            var label by remember { mutableStateOf("") }
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(20.dp)) {
+                    Text("NFC Device Detected", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "UID: ${rs.uid}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = label,
+                        onValueChange = { label = it },
+                        label = { Text("Label (e.g. My Ring, Work Card)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
+                            Text("Cancel")
+                        }
+                        Button(
+                            onClick = { onRegister(rs.uid, label) },
+                            modifier = Modifier.weight(1f)
+                        ) { Text("Register") }
+                    }
+                }
+            }
+        }
+
+        is NfcRegistrationState.Registering -> {
+            CircularProgressIndicator()
+            Spacer(Modifier.height(8.dp))
+            Text("Registering device...")
+        }
+
+        is NfcRegistrationState.Success -> {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "Registered successfully",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "\"${rs.label}\" is now linked to your wallet",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = onDone) { Text("Done") }
+                }
+            }
+        }
+
+        is NfcRegistrationState.Error -> {
+            Text(rs.message, color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) {
+                Text("Try Again")
             }
         }
     }

@@ -34,4 +34,10 @@ interface ApiService {
 
     @GET("api/transactions")
     suspend fun getTransactions(): Response<List<TransactionResponse>>
+
+    @POST("api/nfc")
+    suspend fun registerNfcToken(@Body body: RegisterNfcTokenRequest): Response<NfcTokenResponse>
+
+    @GET("api/nfc")
+    suspend fun getMyTokens(): Response<List<NfcTokenResponse>>
 }
