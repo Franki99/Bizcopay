@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.bizcopay.app.data.local.TokenManager
+import com.bizcopay.app.data.nfc.NfcEventBus
 import com.bizcopay.app.ui.navigation.Screen
 
 @Composable
@@ -75,14 +76,27 @@ fun MerchantScreen(navController: NavController, viewModel: MerchantViewModel = 
                 }
 
                 is MerchantState.WaitingForNfc -> {
+                    // Collect real NFC taps from the activity via the event bus
+                    LaunchedEffect(s.transactionId) {
+                        NfcEventBus.uid.collect { uid ->
+                            viewModel.onNfcRead(s.transactionId, uid)
+                        }
+                    }
+
                     Text("Ready — $${s.amount}", style = MaterialTheme.typography.headlineSmall)
                     Spacer(Modifier.height(8.dp))
-                    Text("Ask customer to tap their NFC device", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        "Ask customer to tap their NFC ring, card, or bracelet",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                     Spacer(Modifier.height(32.dp))
-                    Button(
-                        onClick = { viewModel.onNfcRead(s.transactionId, "CARD-001") },
+                    CircularProgressIndicator()
+                    Spacer(Modifier.height(24.dp))
+                    // Keep simulate button for testing without a physical NFC device
+                    OutlinedButton(
+                        onClick = { viewModel.onNfcRead(s.transactionId, "SIMULATED-UID-001") },
                         modifier = Modifier.fillMaxWidth()
-                    ) { Text("Simulate NFC Tap") }
+                    ) { Text("Simulate NFC Tap (no device)") }
                     Spacer(Modifier.height(8.dp))
                     TextButton(onClick = { viewModel.reset() }) { Text("Cancel") }
                 }
