@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.bizcopay.app.data.local.TokenManager
 import com.bizcopay.app.data.network.ApiClient
 import com.bizcopay.app.data.network.models.ApprovePinRequest
+import com.bizcopay.app.data.network.models.NfcTokenResponse
 import com.bizcopay.app.data.network.models.RegisterNfcTokenRequest
 import com.bizcopay.app.data.network.models.WalletResponse
 import com.bizcopay.app.data.nfc.NfcEventBus
@@ -50,8 +51,12 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
     private val _registrationState = MutableStateFlow<NfcRegistrationState>(NfcRegistrationState.Idle)
     val registrationState: StateFlow<NfcRegistrationState> = _registrationState
 
+    private val _tokens = MutableStateFlow<List<NfcTokenResponse>>(emptyList())
+    val tokens: StateFlow<List<NfcTokenResponse>> = _tokens
+
     init {
         loadWallet()
+        loadTokens()
         connectSocket()
     }
 
@@ -60,6 +65,26 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val response = api.getWallet()
                 if (response.isSuccessful) _wallet.value = response.body()
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun loadTokens() {
+        viewModelScope.launch {
+            try {
+                val response = api.getMyTokens()
+                if (response.isSuccessful) _tokens.value = response.body() ?: emptyList()
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun deactivateToken(tokenId: String) {
+        viewModelScope.launch {
+            try {
+                val response = api.deactivateNfcToken(tokenId)
+                if (response.isSuccessful) {
+                    _tokens.value = _tokens.value.filter { it.id != tokenId }
+                }
             } catch (_: Exception) {}
         }
     }
@@ -131,6 +156,7 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
                     _registrationState.value = NfcRegistrationState.Success(
                         label.ifBlank { uid }
                     )
+                    loadTokens()
                 } else {
                     val code = response.code()
                     val msg = if (code == 409) "This token is already registered"

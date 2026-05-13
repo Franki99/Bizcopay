@@ -3,6 +3,7 @@ package com.bizcopay.app.ui.payer
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.bizcopay.app.data.local.TokenManager
+import com.bizcopay.app.data.network.models.NfcTokenResponse
 import com.bizcopay.app.ui.navigation.Screen
 
 @Composable
@@ -21,6 +23,7 @@ fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewMo
     val state by viewModel.state.collectAsState()
     val wallet by viewModel.wallet.collectAsState()
     val registrationState by viewModel.registrationState.collectAsState()
+    val tokens by viewModel.tokens.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
 
     fun logout() {
@@ -142,7 +145,7 @@ fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewMo
                 }
             }
 
-            // ── NFC Token Registration (only visible when not handling a payment) ──
+            // ── NFC Device Management (only visible when not handling a payment) ──
             if (state is PayerState.Idle || state is PayerState.Error) {
                 Spacer(Modifier.height(40.dp))
                 HorizontalDivider()
@@ -150,10 +153,12 @@ fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewMo
 
                 NfcRegistrationSection(
                     registrationState = registrationState,
+                    tokens = tokens,
                     onStart = { viewModel.startNfcRegistration() },
                     onCancel = { viewModel.cancelNfcRegistration() },
                     onRegister = { uid, label -> viewModel.registerToken(uid, label) },
-                    onDone = { viewModel.resetRegistration() }
+                    onDone = { viewModel.resetRegistration() },
+                    onDelete = { tokenId -> viewModel.deactivateToken(tokenId) }
                 )
             }
         }
@@ -163,13 +168,23 @@ fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewMo
 @Composable
 private fun NfcRegistrationSection(
     registrationState: NfcRegistrationState,
+    tokens: List<NfcTokenResponse>,
     onStart: () -> Unit,
     onCancel: () -> Unit,
     onRegister: (uid: String, label: String) -> Unit,
     onDone: () -> Unit,
+    onDelete: (tokenId: String) -> Unit,
 ) {
     Text("My NFC Devices", style = MaterialTheme.typography.titleMedium)
     Spacer(Modifier.height(12.dp))
+
+    // Registered token list
+    tokens.forEach { token ->
+        TokenRow(token = token, onDelete = { onDelete(token.id) })
+        Spacer(Modifier.height(8.dp))
+    }
+
+    if (tokens.isNotEmpty()) Spacer(Modifier.height(8.dp))
 
     when (val rs = registrationState) {
         is NfcRegistrationState.Idle -> {
@@ -268,5 +283,54 @@ private fun NfcRegistrationSection(
                 Text("Try Again")
             }
         }
+    }
+}
+
+@Composable
+private fun TokenRow(token: NfcTokenResponse, onDelete: () -> Unit) {
+    var showConfirm by remember { mutableStateOf(false) }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    token.label ?: token.uid,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    "UID: ${token.uid}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(onClick = { showConfirm = true }) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Remove device",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+
+    if (showConfirm) {
+        AlertDialog(
+            onDismissRequest = { showConfirm = false },
+            title = { Text("Remove device?") },
+            text = {
+                Text("\"${token.label ?: token.uid}\" will be unlinked from your wallet and can no longer be used for payments.")
+            },
+            confirmButton = {
+                TextButton(onClick = { showConfirm = false; onDelete() }) {
+                    Text("Remove", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirm = false }) { Text("Cancel") }
+            }
+        )
     }
 }

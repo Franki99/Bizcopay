@@ -40,4 +40,7 @@ interface ApiService {
 
     @GET("api/nfc")
     suspend fun getMyTokens(): Response<List<NfcTokenResponse>>
+
+    @PATCH("api/nfc/{id}/deactivate")
+    suspend fun deactivateNfcToken(@Path("id") id: String): Response<NfcTokenResponse>
 }
