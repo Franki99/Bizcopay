@@ -6,12 +6,14 @@ import { api, User } from '@/lib/api'
 import { isLoggedIn } from '@/lib/auth'
 import Sidebar from '@/components/Sidebar'
 import TopUpModal from '@/components/TopUpModal'
+import AssignNfcModal from '@/components/AssignNfcModal'
 
 export default function UsersPage() {
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [topUpTarget, setTopUpTarget] = useState<User | null>(null)
+  const [nfcTarget, setNfcTarget] = useState<User | null>(null)
   const [search, setSearch] = useState('')
 
   async function load() {
@@ -92,11 +94,17 @@ export default function UsersPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       {user.role !== 'ADMIN' && (
                         <button onClick={() => setTopUpTarget(user)}
                           className="px-3 py-1 text-xs rounded-lg bg-brand-50 text-brand-600 font-medium hover:bg-brand-100 transition-colors">
                           Top Up
+                        </button>
+                      )}
+                      {user.role === 'PAYER' && (
+                        <button onClick={() => setNfcTarget(user)}
+                          className="px-3 py-1 text-xs rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors">
+                          NFC Tokens
                         </button>
                       )}
                       {user.isActive && user.role !== 'ADMIN' && (
@@ -122,6 +130,13 @@ export default function UsersPage() {
           user={topUpTarget}
           onClose={() => setTopUpTarget(null)}
           onSuccess={load}
+        />
+      )}
+
+      {nfcTarget && (
+        <AssignNfcModal
+          user={nfcTarget}
+          onClose={() => setNfcTarget(null)}
         />
       )}
     </div>

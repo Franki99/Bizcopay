@@ -45,6 +45,13 @@ export interface Transaction {
   fraudLog?: { ruleTriggered: string; riskScore: string; details: Record<string, unknown> }
 }
 
+export interface NfcToken {
+  id: string
+  uid: string
+  label: string | null
+  isActive: boolean
+}
+
 export const api = {
   login: (email: string, pin: string) =>
     request<{ user: User; token: string }>('/api/auth/login', {
@@ -64,4 +71,13 @@ export const api = {
     }),
 
   getTransactions: () => request<Transaction[]>('/api/transactions'),
+
+  getUserTokens: (userId: string) =>
+    request<NfcToken[]>(`/api/nfc/user/${userId}`),
+
+  assignNfcToken: (userId: string, uid: string, label: string) =>
+    request<NfcToken>('/api/nfc/assign', {
+      method: 'POST',
+      body: JSON.stringify({ userId, uid, label: label || undefined }),
+    }),
 }

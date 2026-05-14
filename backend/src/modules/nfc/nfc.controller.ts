@@ -26,3 +26,20 @@ export async function deactivateToken(req: Request, res: Response, next: NextFun
     next(err)
   }
 }
+
+export async function assignToken(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = nfcService.assignTokenSchema.parse(req.body)
+    res.status(201).json(await nfcService.assignToken(data))
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function getUserTokensById(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json(await nfcService.getUserTokens(req.params.userId))
+  } catch (err) {
+    next(err)
+  }
+}

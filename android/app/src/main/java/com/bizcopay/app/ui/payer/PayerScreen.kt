@@ -148,7 +148,7 @@ fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewMo
             // ── NFC Device Management (only visible when not handling a payment) ──
             if (state is PayerState.Idle || state is PayerState.Error) {
                 Spacer(Modifier.height(40.dp))
-                HorizontalDivider()
+                Divider()
                 Spacer(Modifier.height(24.dp))
 
                 NfcRegistrationSection(
