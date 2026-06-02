@@ -15,7 +15,17 @@ export const assignTokenSchema = z.object({
 
 export async function registerToken(userId: string, data: z.infer<typeof registerTokenSchema>) {
   const existing = await prisma.nfcToken.findUnique({ where: { uid: data.uid } })
-  if (existing) throw new AppError(409, 'NFC token already registered')
+
+  if (existing) {
+    // If this UID was previously deactivated by the same user, reactivate it
+    if (existing.userId === userId && !existing.isActive) {
+      return prisma.nfcToken.update({
+        where: { id: existing.id },
+        data: { isActive: true, label: data.label ?? existing.label },
+      })
+    }
+    throw new AppError(409, 'NFC token already registered to another account')
+  }
 
   return prisma.nfcToken.create({ data: { uid: data.uid, label: data.label, userId } })
 }
@@ -35,7 +45,16 @@ export async function getUserTokens(userId: string) {
 
 export async function assignToken(data: z.infer<typeof assignTokenSchema>) {
   const existing = await prisma.nfcToken.findUnique({ where: { uid: data.uid } })
-  if (existing) throw new AppError(409, 'NFC token already registered')
+
+  if (existing) {
+    if (existing.userId === data.userId && !existing.isActive) {
+      return prisma.nfcToken.update({
+        where: { id: existing.id },
+        data: { isActive: true, label: data.label ?? existing.label },
+      })
+    }
+    throw new AppError(409, 'NFC token already registered to another account')
+  }
 
   const user = await prisma.user.findUnique({ where: { id: data.userId } })
   if (!user) throw new AppError(404, 'User not found')
