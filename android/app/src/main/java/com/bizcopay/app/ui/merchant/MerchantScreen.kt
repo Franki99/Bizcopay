@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -102,9 +103,45 @@ fun MerchantScreen(navController: NavController, viewModel: MerchantViewModel = 
                 }
 
                 is MerchantState.WaitingForPin -> {
-                    CircularProgressIndicator()
-                    Spacer(Modifier.height(12.dp))
-                    Text("Waiting for customer PIN approval...")
+                    var pin by remember { mutableStateOf("") }
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(20.dp)) {
+                            Text("PIN Required", style = MaterialTheme.typography.titleLarge)
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "Amount: RWF ${s.amount}",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "Hand the device to the customer to enter their PIN",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            OutlinedTextField(
+                                value = pin,
+                                onValueChange = { if (it.length <= 4) pin = it },
+                                label = { Text("Customer PIN") },
+                                visualTransformation = PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedButton(
+                                    onClick = { viewModel.reset() },
+                                    modifier = Modifier.weight(1f)
+                                ) { Text("Cancel") }
+                                Button(
+                                    onClick = { viewModel.submitPin(s.transactionId, pin) },
+                                    enabled = pin.length == 4,
+                                    modifier = Modifier.weight(1f)
+                                ) { Text("Confirm") }
+                            }
+                        }
+                    }
                 }
 
                 is MerchantState.Approved -> {

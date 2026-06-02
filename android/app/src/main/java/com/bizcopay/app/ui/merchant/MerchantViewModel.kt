@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.bizcopay.app.data.local.TokenManager
 import com.bizcopay.app.data.network.ApiClient
+import com.bizcopay.app.data.network.models.ApprovePinRequest
 import com.bizcopay.app.data.network.models.CreateTransactionRequest
 import com.bizcopay.app.data.network.models.NfcTapRequest
 import com.bizcopay.app.data.socket.SocketManager
@@ -16,7 +17,7 @@ sealed class MerchantState {
     object Idle : MerchantState()
     object Loading : MerchantState()
     data class WaitingForNfc(val transactionId: String, val amount: String) : MerchantState()
-    object WaitingForPin : MerchantState()
+    data class WaitingForPin(val transactionId: String, val amount: String) : MerchantState()
     data class Approved(val amount: String) : MerchantState()
     data class Failed(val reason: String) : MerchantState()
     data class Error(val message: String) : MerchantState()
@@ -78,8 +79,26 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
             mgr.onPaymentFailed { data ->
                 _state.value = MerchantState.Failed(data.optString("reason", "Unknown reason"))
             }
-            mgr.onPaymentPendingPin {
-                _state.value = MerchantState.WaitingForPin
+            mgr.onPaymentPendingPin { data ->
+                _state.value = MerchantState.WaitingForPin(
+                    transactionId = data.optString("transactionId"),
+                    amount = data.optString("amount")
+                )
+            }
+        }
+    }
+
+    fun submitPin(transactionId: String, pin: String) {
+        viewModelScope.launch {
+            _state.value = MerchantState.Loading
+            try {
+                val response = api.approveWithPin(transactionId, ApprovePinRequest(pin))
+                if (!response.isSuccessful) {
+                    _state.value = MerchantState.Error("Incorrect PIN")
+                }
+                // Approved/failed result arrives via socket
+            } catch (e: Exception) {
+                _state.value = MerchantState.Error("Connection failed")
             }
         }
     }
