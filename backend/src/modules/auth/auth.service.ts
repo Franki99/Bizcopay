@@ -42,7 +42,7 @@ export async function register(data: z.infer<typeof registerSchema>) {
       phone: data.phone,
       pin: hashedPin,
       role: data.role,
-      wallet: { create: { currency: 'USD' } },
+      wallet: { create: { currency: 'RWF' } },
     },
     include: { wallet: true },
   })

@@ -5,7 +5,7 @@ import { prisma } from '../../lib/prisma'
 const ML_TIMEOUT_MS = 3000
 
 // Fallback rule constants (used when ML service is unreachable)
-const AMOUNT_THRESHOLD = 500
+const AMOUNT_THRESHOLD = 50000
 const RAPID_TX_LIMIT = 3
 const RAPID_TX_WINDOW_MS = 60 * 1000
 const UNUSUAL_HOUR_START = 0

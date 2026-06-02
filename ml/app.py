@@ -28,8 +28,9 @@ except FileNotFoundError:
     )
 
 # Risk thresholds (fraud probability → label)
-HIGH_THRESHOLD = 0.5
-MEDIUM_THRESHOLD = 0.2
+# Option B: lower MEDIUM threshold so UNUSUAL_HOUR triggers MEDIUM in demo
+HIGH_THRESHOLD = 0.7
+MEDIUM_THRESHOLD = 0.08
 
 
 class TransactionFeatures(BaseModel):

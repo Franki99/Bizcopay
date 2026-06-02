@@ -51,7 +51,7 @@ fun MerchantScreen(navController: NavController, viewModel: MerchantViewModel = 
                 is MerchantState.Idle -> {
                     OutlinedTextField(
                         value = amount, onValueChange = { amount = it },
-                        label = { Text("Amount (USD)") },
+                        label = { Text("Amount (RWF)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true, modifier = Modifier.fillMaxWidth()
                     )
@@ -83,7 +83,7 @@ fun MerchantScreen(navController: NavController, viewModel: MerchantViewModel = 
                         }
                     }
 
-                    Text("Ready — $${s.amount}", style = MaterialTheme.typography.headlineSmall)
+                    Text("Ready — RWF ${s.amount}", style = MaterialTheme.typography.headlineSmall)
                     Spacer(Modifier.height(8.dp))
                     Text(
                         "Ask customer to tap their NFC ring, card, or bracelet",
@@ -111,7 +111,7 @@ fun MerchantScreen(navController: NavController, viewModel: MerchantViewModel = 
                     Text("Payment Approved", style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(8.dp))
-                    Text("$${s.amount} received", style = MaterialTheme.typography.titleMedium)
+                    Text("RWF ${s.amount} received", style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.height(32.dp))
                     Button(onClick = { viewModel.reset() }, modifier = Modifier.fillMaxWidth()) {
                         Text("New Payment")

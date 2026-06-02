@@ -87,7 +87,7 @@ fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewMo
                             Text("Payment Request", style = MaterialTheme.typography.titleLarge)
                             Spacer(Modifier.height(12.dp))
                             Text("From: ${s.payment.merchantName}")
-                            Text("Amount: $${s.payment.amount}", style = MaterialTheme.typography.titleMedium)
+                            Text("Amount: RWF ${s.payment.amount}", style = MaterialTheme.typography.titleMedium)
                             Spacer(Modifier.height(16.dp))
                             OutlinedTextField(
                                 value = pin,
@@ -121,7 +121,7 @@ fun PayerScreen(navController: NavController, viewModel: PayerViewModel = viewMo
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(Modifier.height(8.dp))
-                    Text("$${s.amount} deducted", style = MaterialTheme.typography.bodyLarge)
+                    Text("RWF ${s.amount} deducted", style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(24.dp))
                     Button(onClick = { viewModel.reset() }) { Text("Done") }
                 }
