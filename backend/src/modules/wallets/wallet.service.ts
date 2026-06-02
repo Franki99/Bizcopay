@@ -4,7 +4,7 @@ import { AppError } from '../../middleware/error.middleware'
 
 export const topUpSchema = z.object({
   userId: z.string().uuid(),
-  amount: z.number().positive().max(10000),
+  amount: z.number().positive().max(10_000_000),
 })
 
 export async function getWallet(userId: string) {
