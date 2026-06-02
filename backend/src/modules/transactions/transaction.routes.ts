@@ -9,7 +9,7 @@ router.use(authenticate)
 
 router.post('/', requireRole(Role.MERCHANT), transactionController.create)
 router.post('/:id/nfc', requireRole(Role.MERCHANT), transactionController.resolveNfc)
-router.post('/:id/approve', requireRole(Role.PAYER), transactionController.approveWithPin)
+router.post('/:id/approve', requireRole(Role.MERCHANT), transactionController.approveWithPin)
 router.get('/', transactionController.getAll)
 
 export default router

@@ -158,7 +158,7 @@ describe('approveWithPin', () => {
   })
 
   it('approves transaction with correct PIN', async () => {
-    const result = await approveWithPin('tx-1', 'payer-1', '1234')
+    const result = await approveWithPin('tx-1', '1234')
 
     expect(result.status).toBe(TransactionStatus.APPROVED)
     expect(mockPrismaTransaction).toHaveBeenCalled()
@@ -167,16 +167,12 @@ describe('approveWithPin', () => {
   it('throws 401 for wrong PIN', async () => {
     mockVerifyPin.mockResolvedValue(false)
 
-    await expect(approveWithPin('tx-1', 'payer-1', '9999')).rejects.toThrow(AppError)
-  })
-
-  it('throws 403 when wrong user tries to approve', async () => {
-    await expect(approveWithPin('tx-1', 'other-user', '1234')).rejects.toThrow(AppError)
+    await expect(approveWithPin('tx-1', '9999')).rejects.toThrow(AppError)
   })
 
   it('throws 400 when transaction is not awaiting PIN', async () => {
     mockTxFindUnique.mockResolvedValue({ ...awaitingTx, status: TransactionStatus.APPROVED })
 
-    await expect(approveWithPin('tx-1', 'payer-1', '1234')).rejects.toThrow(AppError)
+    await expect(approveWithPin('tx-1', '1234')).rejects.toThrow(AppError)
   })
 })

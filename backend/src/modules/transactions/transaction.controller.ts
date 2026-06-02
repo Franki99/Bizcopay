@@ -24,7 +24,7 @@ export async function approveWithPin(req: Request, res: Response, next: NextFunc
   try {
     const { pin } = req.body
     if (!pin) { res.status(400).json({ message: 'pin is required' }); return }
-    res.json(await transactionService.approveWithPin(req.params.id, req.user!.userId, pin))
+    res.json(await transactionService.approveWithPin(req.params.id, pin))
   } catch (err) {
     next(err)
   }

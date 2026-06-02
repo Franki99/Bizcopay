@@ -107,20 +107,20 @@ export async function resolveNfc(transactionId: string, nfcUid: string) {
   return { status: TransactionStatus.APPROVED }
 }
 
-export async function approveWithPin(transactionId: string, userId: string, pin: string) {
+export async function approveWithPin(transactionId: string, pin: string) {
   const transaction = await findOrThrow(transactionId)
 
   if (transaction.status !== TransactionStatus.AWAITING_PIN) {
     throw new AppError(400, 'Transaction is not awaiting PIN')
   }
-  if (transaction.payerId !== userId) {
-    throw new AppError(403, 'Unauthorized')
+  if (!transaction.payerId) {
+    throw new AppError(400, 'No payer linked to this transaction')
   }
 
-  const pinValid = await verifyPin(userId, pin)
+  const pinValid = await verifyPin(transaction.payerId, pin)
   if (!pinValid) throw new AppError(401, 'Invalid PIN')
 
-  const payer = await prisma.user.findUnique({ where: { id: userId }, include: { wallet: true } })
+  const payer = await prisma.user.findUnique({ where: { id: transaction.payerId }, include: { wallet: true } })
   const amount = Number(transaction.amount)
 
   if (!payer?.wallet || Number(payer.wallet.balance) < amount) {
@@ -135,7 +135,7 @@ export async function approveWithPin(transactionId: string, userId: string, pin:
     throw new AppError(400, 'Insufficient balance')
   }
 
-  await processPayment(transactionId, userId, transaction.merchantId, amount)
+  await processPayment(transactionId, transaction.payerId, transaction.merchantId, amount)
   return { status: TransactionStatus.APPROVED }
 }
 
