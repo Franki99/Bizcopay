@@ -40,18 +40,20 @@ async function callMlService(
 }
 
 function ruleBasedEvaluate(amount: number, hour: number, recentCount: number): FraudResult {
-  if (amount > AMOUNT_THRESHOLD) {
-    return {
-      riskScore: RiskScore.HIGH,
-      ruleTriggered: 'HIGH_AMOUNT',
-      details: { amount, threshold: AMOUNT_THRESHOLD, source: 'rules' },
-    }
-  }
+  // Only RAPID_TX causes outright rejection — it is unambiguously automated fraud
   if (recentCount >= RAPID_TX_LIMIT) {
     return {
       riskScore: RiskScore.HIGH,
       ruleTriggered: 'RAPID_TRANSACTIONS',
       details: { recentCount, windowSeconds: 60, limit: RAPID_TX_LIMIT, source: 'rules' },
+    }
+  }
+  // High amounts and unusual hours require PIN verification, not rejection
+  if (amount > AMOUNT_THRESHOLD) {
+    return {
+      riskScore: RiskScore.MEDIUM,
+      ruleTriggered: 'HIGH_AMOUNT',
+      details: { amount, threshold: AMOUNT_THRESHOLD, source: 'rules' },
     }
   }
   if (hour >= UNUSUAL_HOUR_START && hour < UNUSUAL_HOUR_END) {
@@ -78,11 +80,16 @@ export async function evaluate(payerId: string, amount: number): Promise<FraudRe
   const ml = await callMlService(amount, hour, recentCount)
 
   if (ml) {
-    const riskScore =
-      ml.risk === 'HIGH' ? RiskScore.HIGH : ml.risk === 'MEDIUM' ? RiskScore.MEDIUM : RiskScore.LOW
+    let riskScore: RiskScore
+    if (ml.risk === 'HIGH') {
+      // Only RAPID_TX warrants outright rejection; large amounts/unusual hours need PIN
+      riskScore = recentCount >= RAPID_TX_LIMIT ? RiskScore.HIGH : RiskScore.MEDIUM
+    } else {
+      riskScore = ml.risk === 'MEDIUM' ? RiskScore.MEDIUM : RiskScore.LOW
+    }
     return {
       riskScore,
-      ruleTriggered: ml.risk !== 'LOW' ? 'ML_MODEL' : null,
+      ruleTriggered: riskScore !== RiskScore.LOW ? 'ML_MODEL' : null,
       details: { score: ml.score, amount, hour, velocity_60s: recentCount, source: 'ml' },
     }
   }
