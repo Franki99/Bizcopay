@@ -1,14 +1,17 @@
 package com.bizcopay.app.ui.payer
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -18,6 +21,25 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.bizcopay.app.data.local.TokenManager
 import com.bizcopay.app.ui.theme.*
+import java.util.Calendar
+
+private fun timeBasedGreeting(): String {
+    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+    return when (hour) {
+        in 5..11  -> "Good morning,"
+        in 12..16 -> "Good afternoon,"
+        else      -> "Good evening,"
+    }
+}
+
+private fun merchantInitialColor(name: String): Color {
+    val colors = listOf(
+        Color(0xFF3B82F6), Color(0xFFA855F7), Color(0xFFEF4444),
+        Color(0xFF10B981), Color(0xFFF59E0B), Color(0xFF6366F1),
+        Color(0xFFF97316), Color(0xFF14B8A6)
+    )
+    return colors[(name.firstOrNull()?.code ?: 0) % colors.size]
+}
 
 @Composable
 fun PayerHomeScreen(
@@ -25,11 +47,13 @@ fun PayerHomeScreen(
     viewModel: PayerViewModel,
     onGoToHistory: () -> Unit,
 ) {
-    val state   by viewModel.state.collectAsState()
-    val wallet  by viewModel.wallet.collectAsState()
+    val state        by viewModel.state.collectAsState()
+    val wallet       by viewModel.wallet.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
+    val analytics    by viewModel.analytics.collectAsState()
     val context = LocalContext.current
     val name    = remember { TokenManager(context).getName() ?: "User" }
+    val greeting = remember { timeBasedGreeting() }
     val recentTxs = transactions.take(3)
 
     Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
@@ -43,20 +67,88 @@ fun PayerHomeScreen(
                         .padding(horizontal = 24.dp, vertical = 36.dp)
                 ) {
                     Column {
-                        Text("Good morning,", color = BizcoTextSecondary.copy(alpha = 0.8f), fontSize = 14.sp)
-                        Text(name, color = BizcoTextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(28.dp))
-                        Text("Active balance", color = BizcoTextSecondary.copy(alpha = 0.8f), fontSize = 13.sp)
-                        Spacer(Modifier.height(4.dp))
-                        wallet?.let {
-                            Text(
-                                "${it.currency} ${"%,.0f".format(it.balance.toDouble())}",
-                                color = BizcoTextPrimary,
-                                fontSize = 38.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = (-1).sp
+                        // Greeting row: text on left, avatar on right
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(greeting, color = BizcoTextSecondary.copy(alpha = 0.8f), fontSize = 14.sp)
+                                Text(name, color = BizcoTextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .border(2.dp, BizcoOrange, CircleShape)
+                                    .background(BizcoBlueDark),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    name.take(1).uppercase(),
+                                    color = BizcoTextPrimary,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(24.dp))
+
+                        // Frosted balance card
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White.copy(alpha = 0.05f)
                             )
-                        } ?: Text("—", color = BizcoTextPrimary, fontSize = 38.sp, fontWeight = FontWeight.Bold)
+                        ) {
+                            Column(modifier = Modifier.padding(20.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "Active Balance",
+                                        color = BizcoTextSecondary.copy(alpha = 0.8f),
+                                        fontSize = 13.sp
+                                    )
+                                    Text("👁", fontSize = 16.sp)
+                                }
+                                Spacer(Modifier.height(6.dp))
+                                wallet?.let {
+                                    Text(
+                                        "${it.currency} ${"%,.0f".format(it.balance.toDouble())}",
+                                        color = BizcoTextPrimary,
+                                        fontSize = 38.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = (-1).sp
+                                    )
+                                } ?: Text("—", color = BizcoTextPrimary, fontSize = 38.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        // Quick stats row
+                        analytics?.let { data ->
+                            Spacer(Modifier.height(16.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                StatChip(
+                                    label = "This month",
+                                    value = "RWF ${"%,.0f".format(data.thisMonth)}",
+                                    modifier = Modifier.weight(1f)
+                                )
+                                StatChip(
+                                    label = "Total spent",
+                                    value = "RWF ${"%,.0f".format(data.totalSpent)}",
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -93,7 +185,7 @@ fun PayerHomeScreen(
                 }
             } else {
                 items(recentTxs) { tx ->
-                    TransactionListItem(
+                    HomeTransactionItem(
                         tx = tx,
                         modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
                     )
@@ -112,6 +204,83 @@ fun PayerHomeScreen(
                 contentAlignment = Alignment.BottomCenter
             ) {
                 PaymentResultCard(state = state, onDismiss = { viewModel.reset() })
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatChip(label: String, value: String, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.08f))
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+            Text(label, color = BizcoTextSecondary.copy(alpha = 0.8f), fontSize = 11.sp)
+            Spacer(Modifier.height(2.dp))
+            Text(value, color = BizcoTextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+@Composable
+private fun HomeTransactionItem(
+    tx: com.bizcopay.app.data.network.models.TransactionResponse,
+    modifier: Modifier = Modifier
+) {
+    val merchantName = tx.merchant?.name ?: "Unknown merchant"
+    val initColor = merchantInitialColor(merchantName)
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = BizcoCard)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Merchant initial avatar
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(initColor.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    merchantName.take(1).uppercase(),
+                    color = initColor,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    merchantName,
+                    color = BizcoTextPrimary,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    tx.createdAt.take(16).replace("T", " "),
+                    color = BizcoTextSecondary,
+                    fontSize = 12.sp
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    "- RWF ${"%,.0f".format(tx.amount.toDouble())}",
+                    color = if (tx.status == "APPROVED") BizcoError else BizcoTextMuted,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                if (tx.category != null) {
+                    Text(tx.category, color = BizcoTextMuted, fontSize = 11.sp)
+                }
             }
         }
     }

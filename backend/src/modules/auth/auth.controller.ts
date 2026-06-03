@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import * as authService from './auth.service'
+import { changePinSchema, changePin } from './auth.service'
 
 export async function register(req: Request, res: Response, next: NextFunction) {
   try {
@@ -29,4 +30,12 @@ export async function resetPin(req: Request, res: Response, next: NextFunction) 
   } catch (err) {
     next(err)
   }
+}
+
+export const changePinController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { currentPin, newPin } = changePinSchema.parse(req.body)
+    await changePin(req.user!.userId, currentPin, newPin)
+    res.json({ message: 'PIN changed successfully' })
+  } catch (e) { next(e) }
 }

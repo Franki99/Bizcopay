@@ -58,6 +58,9 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
     private val _analytics = MutableStateFlow<PayerAnalyticsResponse?>(null)
     val analytics: StateFlow<PayerAnalyticsResponse?> = _analytics
 
+    private val _analyticsLoaded = MutableStateFlow(false)
+    val analyticsLoaded: StateFlow<Boolean> = _analyticsLoaded
+
     init {
         loadWallet()
         loadTokens()
@@ -109,15 +112,20 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val r = api.getPayerAnalytics()
                 if (r.isSuccessful) _analytics.value = r.body()
-            } catch (_: Exception) {}
+            } catch (_: Exception) {} finally {
+                _analyticsLoaded.value = true
+            }
         }
     }
 
     fun categorizeTransaction(transactionId: String, category: String) {
+        // Optimistic update immediately
+        _transactions.value = _transactions.value.map {
+            if (it.id == transactionId) it.copy(category = category) else it
+        }
         viewModelScope.launch {
             try {
-                val r = api.categorizeTransaction(transactionId, CategoryRequest(category))
-                if (r.isSuccessful) loadTransactions()
+                api.categorizeTransaction(transactionId, CategoryRequest(category))
             } catch (_: Exception) {}
         }
     }

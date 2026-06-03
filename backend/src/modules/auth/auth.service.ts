@@ -76,6 +76,20 @@ export async function verifyPin(userId: string, pin: string): Promise<boolean> {
   return bcrypt.compare(pin, user.pin)
 }
 
+export const changePinSchema = z.object({
+  currentPin: z.string().length(4).regex(/^\d{4}$/),
+  newPin:     z.string().length(4).regex(/^\d{4}$/),
+})
+
+export const changePin = async (userId: string, currentPin: string, newPin: string): Promise<void> => {
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) throw new AppError(404, 'User not found')
+  const valid = await bcrypt.compare(currentPin, user.pin)
+  if (!valid) throw new AppError(400, 'Current PIN is incorrect')
+  const hashed = await bcrypt.hash(newPin, 10)
+  await prisma.user.update({ where: { id: userId }, data: { pin: hashed } })
+}
+
 function signToken(userId: string, role: Role) {
   return jwt.sign({ userId, role }, env.JWT_SECRET, { expiresIn: '7d' })
 }

@@ -26,11 +26,28 @@ import com.bizcopay.app.ui.theme.*
 @Composable
 fun PayerInsightsScreen(viewModel: PayerViewModel) {
     val analytics by viewModel.analytics.collectAsState()
+    val analyticsLoaded by viewModel.analyticsLoaded.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
-        if (analytics == null) {
+        if (!analyticsLoaded) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = BizcoBlue)
+                CircularProgressIndicator(color = BizcoOrange)
+            }
+        } else if (analytics == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("📊", fontSize = 48.sp)
+                    Spacer(Modifier.height(16.dp))
+                    Text("No insights yet", color = BizcoTextPrimary, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Complete transactions to see spending analytics",
+                        color = BizcoTextSecondary,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 40.dp)
+                    )
+                }
             }
         } else {
             val data = analytics!!

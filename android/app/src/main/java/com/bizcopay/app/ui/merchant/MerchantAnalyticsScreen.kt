@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bizcopay.app.ui.payer.BizcoBarChart
@@ -17,13 +18,30 @@ import com.bizcopay.app.ui.theme.*
 @Composable
 fun MerchantAnalyticsScreen(viewModel: MerchantViewModel) {
     val analytics by viewModel.analytics.collectAsState()
+    val analyticsLoaded by viewModel.analyticsLoaded.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.loadAnalytics() }
 
     Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
-        if (analytics == null) {
+        if (!analyticsLoaded) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = BizcoBlue)
+                CircularProgressIndicator(color = BizcoOrange)
+            }
+        } else if (analytics == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("📊", fontSize = 48.sp)
+                    Spacer(Modifier.height(16.dp))
+                    Text("No insights yet", color = BizcoTextPrimary, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Complete transactions to see spending analytics",
+                        color = BizcoTextSecondary,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 40.dp)
+                    )
+                }
             }
         } else {
             val data = analytics!!

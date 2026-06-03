@@ -18,6 +18,9 @@ interface ApiService {
     @POST("api/auth/reset-pin")
     suspend fun resetPin(@Body body: ResetPinRequest): Response<MessageResponse>
 
+    @POST("api/auth/change-pin")
+    suspend fun changePin(@Body body: ChangePinRequest): Response<MessageResponse>
+
     @GET("api/users/me")
     suspend fun getMe(): Response<AuthResponse>
 

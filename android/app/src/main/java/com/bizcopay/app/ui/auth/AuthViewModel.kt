@@ -27,7 +27,25 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
     val state: StateFlow<AuthState> = _state
 
+    private val _changePinState = MutableStateFlow<String?>(null)
+    val changePinState: StateFlow<String?> = _changePinState
+
     fun resetState() { _state.value = AuthState.Idle }
+
+    fun changePin(currentPin: String, newPin: String) {
+        viewModelScope.launch {
+            _changePinState.value = "loading"
+            try {
+                val r = api.changePin(ChangePinRequest(currentPin, newPin))
+                if (r.isSuccessful) _changePinState.value = "success"
+                else _changePinState.value = "Current PIN is incorrect"
+            } catch (e: Exception) {
+                _changePinState.value = "Cannot reach server"
+            }
+        }
+    }
+
+    fun resetChangePinState() { _changePinState.value = null }
 
     fun login(email: String, pin: String) {
         viewModelScope.launch {

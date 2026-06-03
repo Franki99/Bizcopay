@@ -39,6 +39,9 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
     private val _analytics = MutableStateFlow<MerchantAnalyticsResponse?>(null)
     val analytics: StateFlow<MerchantAnalyticsResponse?> = _analytics
 
+    private val _analyticsLoaded = MutableStateFlow(false)
+    val analyticsLoaded: StateFlow<Boolean> = _analyticsLoaded
+
     fun createTransaction(amount: Double, description: String) {
         viewModelScope.launch {
             _state.value = MerchantState.Loading
@@ -125,7 +128,9 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
             try {
                 val r = api.getMerchantAnalytics()
                 if (r.isSuccessful) _analytics.value = r.body()
-            } catch (_: Exception) {}
+            } catch (_: Exception) {} finally {
+                _analyticsLoaded.value = true
+            }
         }
     }
 

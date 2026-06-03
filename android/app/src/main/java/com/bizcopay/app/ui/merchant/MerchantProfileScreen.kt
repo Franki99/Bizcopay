@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,10 +13,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.bizcopay.app.data.local.TokenManager
+import com.bizcopay.app.ui.auth.AuthViewModel
 import com.bizcopay.app.ui.navigation.Screen
 import com.bizcopay.app.ui.theme.*
 
@@ -25,6 +30,19 @@ fun MerchantProfileScreen(rootNavController: NavController, viewModel: MerchantV
     val tokenManager = remember { TokenManager(context) }
     val name  = tokenManager.getName() ?: "Merchant"
     val email = tokenManager.getEmail() ?: ""
+
+    val authViewModel: AuthViewModel = viewModel()
+    val changePinState by authViewModel.changePinState.collectAsState()
+
+    var showChangePinDialog by remember { mutableStateOf(false) }
+
+    // Dismiss dialog on success
+    LaunchedEffect(changePinState) {
+        if (changePinState == "success") {
+            showChangePinDialog = false
+            authViewModel.resetChangePinState()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -62,6 +80,23 @@ fun MerchantProfileScreen(rootNavController: NavController, viewModel: MerchantV
             }
         }
         Spacer(Modifier.weight(1f))
+
+        // Change PIN button
+        Button(
+            onClick = {
+                authViewModel.resetChangePinState()
+                showChangePinDialog = true
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = BizcoCard)
+        ) {
+            Text("Change PIN", color = BizcoOrange, fontWeight = FontWeight.SemiBold)
+        }
+        Spacer(Modifier.height(12.dp))
+
         Button(
             onClick = {
                 viewModel.reset()
@@ -76,4 +111,94 @@ fun MerchantProfileScreen(rootNavController: NavController, viewModel: MerchantV
         ) { Text("Logout", color = BizcoError, fontWeight = FontWeight.SemiBold) }
         Spacer(Modifier.height(32.dp))
     }
+
+    if (showChangePinDialog) {
+        MerchantChangePinDialog(
+            changePinState = changePinState,
+            onConfirm = { current, newPin -> authViewModel.changePin(current, newPin) },
+            onDismiss = {
+                showChangePinDialog = false
+                authViewModel.resetChangePinState()
+            }
+        )
+    }
+}
+
+@Composable
+private fun MerchantChangePinDialog(
+    changePinState: String?,
+    onConfirm: (String, String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var currentPin by remember { mutableStateOf("") }
+    var newPin by remember { mutableStateOf("") }
+    val isLoading = changePinState == "loading"
+    val isError = changePinState != null && changePinState != "loading" && changePinState != "success"
+    val canConfirm = currentPin.length == 4 && newPin.length == 4 && !isLoading
+
+    AlertDialog(
+        onDismissRequest = { if (!isLoading) onDismiss() },
+        containerColor = BizcoCard,
+        title = {
+            Text("Change PIN", color = BizcoTextPrimary, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = currentPin,
+                    onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) currentPin = it },
+                    label = { Text("Current PIN", color = BizcoTextSecondary) },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = BizcoOrange,
+                        unfocusedBorderColor = BizcoBorder,
+                        focusedTextColor = BizcoTextPrimary,
+                        unfocusedTextColor = BizcoTextPrimary,
+                        cursorColor = BizcoOrange
+                    )
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = newPin,
+                    onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) newPin = it },
+                    label = { Text("New PIN", color = BizcoTextSecondary) },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = BizcoOrange,
+                        unfocusedBorderColor = BizcoBorder,
+                        focusedTextColor = BizcoTextPrimary,
+                        unfocusedTextColor = BizcoTextPrimary,
+                        cursorColor = BizcoOrange
+                    )
+                )
+                if (isError) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(changePinState ?: "", color = BizcoError, fontSize = 13.sp)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(currentPin, newPin) },
+                enabled = canConfirm
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = BizcoOrange, strokeWidth = 2.dp)
+                } else {
+                    Text("Confirm", color = if (canConfirm) BizcoOrange else BizcoTextMuted, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { if (!isLoading) onDismiss() }) {
+                Text("Cancel", color = BizcoTextSecondary)
+            }
+        }
+    )
 }
