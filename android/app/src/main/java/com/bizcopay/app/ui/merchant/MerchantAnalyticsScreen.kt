@@ -135,7 +135,7 @@ fun MerchantAnalyticsScreen(viewModel: MerchantViewModel) {
                                             fontWeight = FontWeight.SemiBold
                                         )
                                     }
-                                    HorizontalDivider(color = BizcoBorder, thickness = 0.5.dp)
+                                    Divider(color = BizcoBorder, thickness = 0.5.dp)
                                 }
                             }
                         }

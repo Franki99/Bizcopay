@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bizcopay.app.ui.theme.*
@@ -184,44 +185,41 @@ fun DonutChart(
     centerText: String,
     modifier: Modifier = Modifier,
 ) {
-    Canvas(modifier = modifier) {
-        val total = data.sumOf { it.second.toDouble() }.toFloat()
-        if (total == 0f) return@Canvas
-        val strokeWidth = size.minDimension * 0.18f
-        val arcSize = size.minDimension - strokeWidth
-        val topLeft = Offset(
-            (size.width - arcSize) / 2f,
-            (size.height - arcSize) / 2f
-        )
-        var startAngle = -90f
-        data.forEachIndexed { i, (_, value) ->
-            val sweep = (value / total) * 360f
-            drawArc(
-                color = colors[i % colors.size],
-                startAngle = startAngle,
-                sweepAngle = sweep - 3f,
-                useCenter = false,
-                topLeft = topLeft,
-                size = Size(arcSize, arcSize),
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val total = data.sumOf { it.second.toDouble() }.toFloat()
+            if (total == 0f) return@Canvas
+            val strokeWidth = size.minDimension * 0.18f
+            val arcSize = size.minDimension - strokeWidth
+            val topLeft = Offset(
+                (size.width - arcSize) / 2f,
+                (size.height - arcSize) / 2f
             )
-            startAngle += sweep
+            var startAngle = -90f
+            data.forEachIndexed { i, (_, value) ->
+                val sweep = (value / total) * 360f
+                drawArc(
+                    color = colors[i % colors.size],
+                    startAngle = startAngle,
+                    sweepAngle = sweep - 3f,
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = Size(arcSize, arcSize),
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                )
+                startAngle += sweep
+            }
         }
-        // Center label
-        val lines = centerText.split("\n")
-        val paint = android.graphics.Paint().apply {
-            color = android.graphics.Color.WHITE
-            textAlign = android.graphics.Paint.Align.CENTER
-            isFakeBoldText = true
-        }
-        lines.forEachIndexed { i, line ->
-            paint.textSize = if (i == 0) size.minDimension * 0.09f else size.minDimension * 0.11f
-            drawContext.canvas.nativeCanvas.drawText(
-                line,
-                size.width / 2f,
-                size.height / 2f + (i - lines.size / 2f + 0.5f) * paint.textSize * 1.4f,
-                paint
-            )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            centerText.split("\n").forEachIndexed { i, line ->
+                Text(
+                    line,
+                    color = BizcoTextPrimary,
+                    fontSize = if (i == 0) 11.sp else 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }

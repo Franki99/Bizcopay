@@ -238,7 +238,7 @@ private fun DetailRow(label: String, value: String) {
         Text(label, color = BizcoTextSecondary, fontSize = 14.sp, modifier = Modifier.weight(1f))
         Text(value, color = BizcoTextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
     }
-    HorizontalDivider(color = BizcoBorder, thickness = 0.5.dp)
+    Divider(color = BizcoBorder, thickness = 0.5.dp)
 }
 
 @Composable
