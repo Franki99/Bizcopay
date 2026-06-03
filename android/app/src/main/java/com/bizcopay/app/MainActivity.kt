@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
 
         val tokenManager = TokenManager(this)
         val startDestination = when {
-            !tokenManager.isLoggedIn() -> Screen.Login.route
+            !tokenManager.isLoggedIn() -> Screen.Splash.route
             tokenManager.getRole() == "MERCHANT" -> Screen.Merchant.route
             else -> Screen.Payer.route
         }

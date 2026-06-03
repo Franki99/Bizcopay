@@ -36,7 +36,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val response = api.login(LoginRequest(email, pin))
                 if (response.isSuccessful) {
                     val body = response.body()!!
-                    saveSession(body.token, body.user.id, body.user.role, body.user.name)
+                    saveSession(body.token, body.user.id, body.user.role, body.user.name, body.user.email)
                     _state.value = AuthState.Success(body.user.role)
                 } else {
                     _state.value = AuthState.Error("Invalid email or PIN")
@@ -70,7 +70,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val response = api.register(RegisterRequest(name, email, pin, role, otpCode))
                 if (response.isSuccessful) {
                     val body = response.body()!!
-                    saveSession(body.token, body.user.id, body.user.role, body.user.name)
+                    saveSession(body.token, body.user.id, body.user.role, body.user.name, body.user.email)
                     _state.value = AuthState.Success(body.user.role)
                 } else {
                     _state.value = AuthState.Error("Invalid code or email already registered.")
@@ -113,10 +113,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun saveSession(token: String, userId: String, role: String, name: String) {
+    private fun saveSession(token: String, userId: String, role: String, name: String, email: String) {
         tokenManager.saveToken(token)
         tokenManager.saveUserId(userId)
         tokenManager.saveRole(role)
         tokenManager.saveName(name)
+        tokenManager.saveEmail(email)
     }
 }

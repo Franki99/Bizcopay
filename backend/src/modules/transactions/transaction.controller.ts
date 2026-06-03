@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import * as transactionService from './transaction.service'
+import { SpendingCategory } from '@prisma/client'
 
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
@@ -36,4 +37,27 @@ export async function getAll(req: Request, res: Response, next: NextFunction) {
   } catch (err) {
     next(err)
   }
+}
+
+export async function getMy(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json(await transactionService.getMyTransactions(req.user!.userId, req.user!.role))
+  } catch (err) { next(err) }
+}
+
+export async function categorize(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { category } = req.body
+    if (!category) { res.status(400).json({ message: 'category is required' }); return }
+    res.json(await transactionService.categorizeTransaction(req.params.id, req.user!.userId, category as SpendingCategory))
+  } catch (err) { next(err) }
+}
+
+export async function exportCsv(req: Request, res: Response, next: NextFunction) {
+  try {
+    const csv = await transactionService.exportTransactionsCsv(req.user!.userId, req.user!.role)
+    res.setHeader('Content-Type', 'text/csv')
+    res.setHeader('Content-Disposition', 'attachment; filename="transactions.csv"')
+    res.send(csv)
+  } catch (err) { next(err) }
 }

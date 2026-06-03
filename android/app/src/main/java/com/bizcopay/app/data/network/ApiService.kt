@@ -1,6 +1,7 @@
 package com.bizcopay.app.data.network
 
 import com.bizcopay.app.data.network.models.*
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -34,6 +35,21 @@ interface ApiService {
 
     @GET("api/transactions")
     suspend fun getTransactions(): Response<List<TransactionResponse>>
+
+    @GET("api/transactions/my")
+    suspend fun getMyTransactions(): Response<List<TransactionResponse>>
+
+    @PATCH("api/transactions/{id}/category")
+    suspend fun categorizeTransaction(@Path("id") id: String, @Body body: CategoryRequest): Response<TransactionResponse>
+
+    @GET("api/transactions/my/export")
+    suspend fun exportTransactions(): Response<ResponseBody>
+
+    @GET("api/analytics/payer")
+    suspend fun getPayerAnalytics(): Response<PayerAnalyticsResponse>
+
+    @GET("api/analytics/merchant")
+    suspend fun getMerchantAnalytics(): Response<MerchantAnalyticsResponse>
 
     @POST("api/nfc")
     suspend fun registerNfcToken(@Body body: RegisterNfcTokenRequest): Response<NfcTokenResponse>

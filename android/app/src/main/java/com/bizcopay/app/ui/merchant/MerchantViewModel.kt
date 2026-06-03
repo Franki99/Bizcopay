@@ -7,7 +7,9 @@ import com.bizcopay.app.data.local.TokenManager
 import com.bizcopay.app.data.network.ApiClient
 import com.bizcopay.app.data.network.models.ApprovePinRequest
 import com.bizcopay.app.data.network.models.CreateTransactionRequest
+import com.bizcopay.app.data.network.models.MerchantAnalyticsResponse
 import com.bizcopay.app.data.network.models.NfcTapRequest
+import com.bizcopay.app.data.network.models.TransactionResponse
 import com.bizcopay.app.data.socket.SocketManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +32,12 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
 
     private val _state = MutableStateFlow<MerchantState>(MerchantState.Idle)
     val state: StateFlow<MerchantState> = _state
+
+    private val _history = MutableStateFlow<List<TransactionResponse>>(emptyList())
+    val history: StateFlow<List<TransactionResponse>> = _history
+
+    private val _analytics = MutableStateFlow<MerchantAnalyticsResponse?>(null)
+    val analytics: StateFlow<MerchantAnalyticsResponse?> = _analytics
 
     fun createTransaction(amount: Double, description: String) {
         viewModelScope.launch {
@@ -100,6 +108,24 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
             } catch (e: Exception) {
                 _state.value = MerchantState.Error("Connection failed")
             }
+        }
+    }
+
+    fun loadHistory() {
+        viewModelScope.launch {
+            try {
+                val r = api.getMyTransactions()
+                if (r.isSuccessful) _history.value = r.body() ?: emptyList()
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun loadAnalytics() {
+        viewModelScope.launch {
+            try {
+                val r = api.getMerchantAnalytics()
+                if (r.isSuccessful) _analytics.value = r.body()
+            } catch (_: Exception) {}
         }
     }
 

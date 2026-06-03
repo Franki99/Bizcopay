@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { Prisma, RiskScore, TransactionStatus } from '@prisma/client'
+import { Prisma, RiskScore, SpendingCategory, TransactionStatus } from '@prisma/client'
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../middleware/error.middleware'
 import { getIO } from '../../socket'
@@ -7,7 +7,7 @@ import { evaluate } from '../fraud/fraud.service'
 import { verifyPin } from '../auth/auth.service'
 
 export const createTransactionSchema = z.object({
-  amount: z.number().positive().max(100000),
+  amount: z.number().positive().max(5000000),
   description: z.string().max(200).optional(),
 })
 
@@ -167,6 +167,38 @@ async function processPayment(
   ])
 
   getIO().to(`transaction:${transactionId}`).emit('payment:approved', { transactionId, amount })
+}
+
+export async function getMyTransactions(userId: string, role: string) {
+  const where = role === 'MERCHANT'
+    ? { merchantId: userId, status: { in: [TransactionStatus.APPROVED, TransactionStatus.FAILED] } }
+    : { payerId: userId, status: { in: [TransactionStatus.APPROVED, TransactionStatus.FAILED] } }
+  return prisma.transaction.findMany({
+    where,
+    include: {
+      merchant: { select: { id: true, name: true } },
+      payer:    { select: { id: true, name: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+  })
+}
+
+export async function categorizeTransaction(transactionId: string, payerId: string, category: SpendingCategory) {
+  const tx = await prisma.transaction.findUnique({ where: { id: transactionId } })
+  if (!tx) throw new AppError(404, 'Transaction not found')
+  if (tx.payerId !== payerId) throw new AppError(403, 'Not your transaction')
+  return prisma.transaction.update({ where: { id: transactionId }, data: { category } })
+}
+
+export async function exportTransactionsCsv(userId: string, role: string): Promise<string> {
+  const txs = await getMyTransactions(userId, role)
+  const rows = txs.map(tx =>
+    [tx.createdAt.toISOString(), Number(tx.amount).toFixed(2), 'RWF', tx.status,
+     tx.merchant?.name ?? '', tx.description ?? '', tx.category ?? '']
+      .map(v => `"${v}"`).join(',')
+  )
+  return ['Date,Amount,Currency,Status,Merchant,Description,Category', ...rows].join('\n')
 }
 
 async function findOrThrow(id: string) {

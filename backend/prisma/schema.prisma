@@ -34,7 +34,7 @@ model Wallet {
   id        String   @id @default(uuid())
   userId    String   @unique
   balance   Decimal  @default(0) @db.Decimal(12, 2)
-  currency  String   @default("USD")
+  currency  String   @default("RWF")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -55,7 +55,7 @@ model NfcToken {
 model Transaction {
   id            String            @id @default(uuid())
   amount        Decimal           @db.Decimal(12, 2)
-  currency      String            @default("USD")
+  currency      String            @default("RWF")
   status        TransactionStatus @default(PENDING)
   riskScore     RiskScore         @default(LOW)
   payerId       String?
@@ -63,6 +63,7 @@ model Transaction {
   nfcTokenUid   String?
   description   String?
   failureReason String?
+  category      SpendingCategory?
   expiresAt     DateTime
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
@@ -84,6 +85,17 @@ enum RiskScore {
   LOW
   MEDIUM
   HIGH
+}
+
+enum SpendingCategory {
+  FOOD
+  TRANSPORT
+  SHOPPING
+  ENTERTAINMENT
+  HEALTH
+  EDUCATION
+  BILLS
+  OTHER
 }
 
 model FraudLog {

@@ -23,6 +23,8 @@ class TokenManager(context: Context) {
     fun getRole(): String? = prefs.getString(KEY_ROLE, null)
     fun saveName(name: String) = prefs.edit().putString(KEY_NAME, name).apply()
     fun getName(): String? = prefs.getString(KEY_NAME, null)
+    fun saveEmail(email: String) = prefs.edit().putString(KEY_EMAIL, email).apply()
+    fun getEmail(): String? = prefs.getString(KEY_EMAIL, null)
     fun isLoggedIn() = getToken() != null
     fun clear() = prefs.edit().clear().apply()
 
@@ -31,5 +33,6 @@ class TokenManager(context: Context) {
         private const val KEY_USER_ID = "user_id"
         private const val KEY_ROLE = "user_role"
         private const val KEY_NAME = "user_name"
+        private const val KEY_EMAIL = "user_email"
     }
 }

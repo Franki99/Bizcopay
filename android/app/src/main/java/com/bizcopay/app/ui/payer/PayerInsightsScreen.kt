@@ -1,0 +1,256 @@
+package com.bizcopay.app.ui.payer
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.bizcopay.app.ui.theme.*
+
+@Composable
+fun PayerInsightsScreen(viewModel: PayerViewModel) {
+    val analytics by viewModel.analytics.collectAsState()
+
+    Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
+        if (analytics == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = BizcoBlue)
+            }
+        } else {
+            val data = analytics!!
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+            ) {
+                item {
+                    Text(
+                        "Spending Insights",
+                        color = BizcoTextPrimary,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 20.dp)
+                    )
+                }
+
+                // Summary card
+                item {
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = BizcoCard),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(20.dp)) {
+                            Text("Total Spent", color = BizcoTextSecondary, fontSize = 13.sp)
+                            Text(
+                                "RWF ${"%,.0f".format(data.totalSpent)}",
+                                color = BizcoTextPrimary,
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "This month: RWF ${"%,.0f".format(data.thisMonth)}",
+                                color = BizcoOrange,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(20.dp))
+                }
+
+                // Donut chart
+                if (data.byCategory.isNotEmpty()) {
+                    item {
+                        Card(
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = BizcoCard),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                Modifier.padding(20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    "By Category",
+                                    color = BizcoTextPrimary,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(Modifier.height(20.dp))
+                                val chartData = data.byCategory.map { it.category to it.amount.toFloat() }
+                                val colors = data.byCategory.map { categoryColor(it.category) }
+                                DonutChart(
+                                    data = chartData,
+                                    colors = colors,
+                                    centerText = "RWF\n${"%,.0f".format(data.totalSpent)}",
+                                    modifier = Modifier.size(200.dp)
+                                )
+                                Spacer(Modifier.height(20.dp))
+                                data.byCategory.forEach { cat ->
+                                    Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            Modifier
+                                                .size(12.dp)
+                                                .clip(CircleShape)
+                                                .background(categoryColor(cat.category))
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            "${categoryEmoji(cat.category)} ${cat.category}",
+                                            color = BizcoTextPrimary,
+                                            fontSize = 14.sp,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Text(
+                                            "RWF ${"%,.0f".format(cat.amount)}",
+                                            color = BizcoTextSecondary,
+                                            fontSize = 13.sp
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        val pct = if (data.totalSpent > 0)
+                                            (cat.amount / data.totalSpent * 100).toInt() else 0
+                                        Text(
+                                            "$pct%",
+                                            color = BizcoOrange,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(20.dp))
+                    }
+                }
+
+                // Monthly bar chart
+                if (data.byMonth.isNotEmpty()) {
+                    item {
+                        Card(
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = BizcoCard),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(Modifier.padding(20.dp)) {
+                                Text(
+                                    "Monthly Spending",
+                                    color = BizcoTextPrimary,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(Modifier.height(16.dp))
+                                val barData = data.byMonth.map { it.month.takeLast(5) to it.amount.toFloat() }
+                                BizcoBarChart(
+                                    data = barData,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(160.dp)
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(24.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DonutChart(
+    data: List<Pair<String, Float>>,
+    colors: List<Color>,
+    centerText: String,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier = modifier) {
+        val total = data.sumOf { it.second.toDouble() }.toFloat()
+        if (total == 0f) return@Canvas
+        val strokeWidth = size.minDimension * 0.18f
+        val arcSize = size.minDimension - strokeWidth
+        val topLeft = Offset(
+            (size.width - arcSize) / 2f,
+            (size.height - arcSize) / 2f
+        )
+        var startAngle = -90f
+        data.forEachIndexed { i, (_, value) ->
+            val sweep = (value / total) * 360f
+            drawArc(
+                color = colors[i % colors.size],
+                startAngle = startAngle,
+                sweepAngle = sweep - 3f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = Size(arcSize, arcSize),
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+            startAngle += sweep
+        }
+        // Center label
+        val lines = centerText.split("\n")
+        val paint = android.graphics.Paint().apply {
+            color = android.graphics.Color.WHITE
+            textAlign = android.graphics.Paint.Align.CENTER
+            isFakeBoldText = true
+        }
+        lines.forEachIndexed { i, line ->
+            paint.textSize = if (i == 0) size.minDimension * 0.09f else size.minDimension * 0.11f
+            drawContext.canvas.nativeCanvas.drawText(
+                line,
+                size.width / 2f,
+                size.height / 2f + (i - lines.size / 2f + 0.5f) * paint.textSize * 1.4f,
+                paint
+            )
+        }
+    }
+}
+
+@Composable
+fun BizcoBarChart(data: List<Pair<String, Float>>, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        val maxVal = data.maxOfOrNull { it.second }?.takeIf { it > 0 } ?: 1f
+        Canvas(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            val n = data.size
+            val barW = size.width / (n * 2f)
+            data.forEachIndexed { i, (_, v) ->
+                val barH = (v / maxVal) * (size.height - 8f)
+                val x = i * (barW + barW) + barW / 2f
+                drawRoundRect(
+                    color = BizcoOrange,
+                    topLeft = Offset(x, size.height - barH),
+                    size = Size(barW, barH),
+                    cornerRadius = CornerRadius(6f, 6f)
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            data.forEach { (label, _) ->
+                Text(label, color = BizcoTextSecondary, fontSize = 10.sp)
+            }
+        }
+    }
+}
