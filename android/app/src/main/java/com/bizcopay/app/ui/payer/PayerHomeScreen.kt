@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -70,43 +72,61 @@ fun PayerHomeScreen(
                         .padding(horizontal = 24.dp, vertical = 36.dp)
                 ) {
                     Column {
-                        // Greeting row: text on left, avatar on right
+                        // Greeting row: avatar + name on left, bell on right
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
-                                Text(greeting, color = BizcoOnDark.copy(alpha = 0.65f), fontSize = 14.sp)
-                                Text(name, color = BizcoOnDark, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .border(2.dp, BizcoGreen, CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (profilePicUri != null) {
-                                    AsyncImage(
-                                        model = profilePicUri,
-                                        contentDescription = "Avatar",
-                                        modifier = Modifier.fillMaxSize().clip(CircleShape),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize().background(BizcoBlueDark),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            name.take(1).uppercase(),
-                                            color = BizcoOnDark,
-                                            fontSize = 20.sp,
-                                            fontWeight = FontWeight.Bold
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .clip(CircleShape)
+                                        .border(2.dp, BizcoGreen, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (profilePicUri != null) {
+                                        AsyncImage(
+                                            model = profilePicUri,
+                                            contentDescription = "Avatar",
+                                            modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                            contentScale = ContentScale.Crop
                                         )
+                                    } else {
+                                        Box(
+                                            modifier = Modifier.fillMaxSize().background(BizcoBlueDark),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                name.take(1).uppercase(),
+                                                color = BizcoOnDark,
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
                                     }
                                 }
+                                Spacer(Modifier.width(12.dp))
+                                Column {
+                                    Text(greeting, color = BizcoOnDark.copy(alpha = 0.65f), fontSize = 13.sp)
+                                    Text(name, color = BizcoOnDark, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                            // Notification bell
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Notifications,
+                                    contentDescription = "Notifications",
+                                    tint = BizcoOnDark,
+                                    modifier = Modifier.size(22.dp)
+                                )
                             }
                         }
 

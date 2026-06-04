@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.bizcopay.app.MainActivity
+import com.bizcopay.app.data.local.NotificationPreferencesManager
 import java.util.concurrent.atomic.AtomicInteger
 
 object NotificationHelper {
@@ -30,17 +31,29 @@ object NotificationHelper {
         )
     }
 
-    fun showPaymentApproved(context: Context, amount: String) =
+    fun showPaymentApproved(context: Context, amount: String) {
+        val p = NotificationPreferencesManager(context)
+        if (!p.notificationsEnabled || !p.paymentEnabled) return
         show(context, CHANNEL_PAYMENT, "Payment Successful", "RWF $amount was deducted from your wallet")
+    }
 
-    fun showPaymentFailed(context: Context, reason: String) =
+    fun showPaymentFailed(context: Context, reason: String) {
+        val p = NotificationPreferencesManager(context)
+        if (!p.notificationsEnabled || !p.paymentEnabled) return
         show(context, CHANNEL_PAYMENT, "Payment Failed", reason)
+    }
 
-    fun showWalletToppedUp(context: Context, amount: String) =
+    fun showWalletToppedUp(context: Context, amount: String) {
+        val p = NotificationPreferencesManager(context)
+        if (!p.notificationsEnabled || !p.topUpEnabled) return
         show(context, CHANNEL_WALLET, "Wallet Topped Up", "RWF $amount has been added to your wallet")
+    }
 
-    fun showPaymentReceived(context: Context, amount: String) =
+    fun showPaymentReceived(context: Context, amount: String) {
+        val p = NotificationPreferencesManager(context)
+        if (!p.notificationsEnabled || !p.paymentEnabled) return
         show(context, CHANNEL_PAYMENT, "Payment Received", "You received RWF $amount")
+    }
 
     private fun show(context: Context, channel: String, title: String, body: String) {
         val intent = Intent(context, MainActivity::class.java).apply {

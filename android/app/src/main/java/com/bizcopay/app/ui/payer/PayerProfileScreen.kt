@@ -2,6 +2,7 @@
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,12 +11,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.rounded.NotificationsNone
+import androidx.compose.material.icons.rounded.Payment
+import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.bizcopay.app.data.local.NotificationPreferencesManager
 import com.bizcopay.app.data.local.TokenManager
 import com.bizcopay.app.ui.auth.AuthViewModel
 import com.bizcopay.app.ui.navigation.Screen
@@ -46,6 +52,11 @@ fun PayerProfileScreen(rootNavController: NavController, viewModel: PayerViewMod
 
     var showChangePinDialog by remember { mutableStateOf(false) }
     var profilePicUri by remember { mutableStateOf(tokenManager.getProfilePicUri()) }
+
+    val notifPrefs = remember { NotificationPreferencesManager(context) }
+    var notifEnabled  by remember { mutableStateOf(notifPrefs.notificationsEnabled) }
+    var topUpEnabled  by remember { mutableStateOf(notifPrefs.topUpEnabled) }
+    var paymentEnabled by remember { mutableStateOf(notifPrefs.paymentEnabled) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
@@ -170,6 +181,74 @@ fun PayerProfileScreen(rootNavController: NavController, viewModel: PayerViewMod
             )
         }
 
+        // Preferences section
+        item {
+            Spacer(Modifier.height(20.dp))
+            Text(
+                "Preferences",
+                color = BizcoTextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = BizcoCard)
+            ) {
+                Column {
+                    // Master notifications toggle
+                    NotifToggleRow(
+                        icon = Icons.Rounded.NotificationsNone,
+                        title = "Notifications",
+                        subtitle = "Enable push notification alerts",
+                        checked = notifEnabled,
+                        onCheckedChange = {
+                            notifEnabled = it
+                            notifPrefs.notificationsEnabled = it
+                        }
+                    )
+                    // Sub-toggles (visible only when master is on)
+                    AnimatedVisibility(visible = notifEnabled) {
+                        Column {
+                            Divider(
+                                color = BizcoBorder,
+                                thickness = 0.5.dp,
+                                modifier = Modifier.padding(start = 56.dp)
+                            )
+                            NotifToggleRow(
+                                icon = Icons.Rounded.AccountBalanceWallet,
+                                title = "Account Top-up",
+                                subtitle = "When funds are added to your wallet",
+                                checked = topUpEnabled,
+                                onCheckedChange = {
+                                    topUpEnabled = it
+                                    notifPrefs.topUpEnabled = it
+                                },
+                                iconTint = BizcoGreen
+                            )
+                            Divider(
+                                color = BizcoBorder,
+                                thickness = 0.5.dp,
+                                modifier = Modifier.padding(start = 56.dp)
+                            )
+                            NotifToggleRow(
+                                icon = Icons.Rounded.Payment,
+                                title = "Payments",
+                                subtitle = "When a payment is made or fails",
+                                checked = paymentEnabled,
+                                onCheckedChange = {
+                                    paymentEnabled = it
+                                    notifPrefs.paymentEnabled = it
+                                },
+                                iconTint = BizcoBlue
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // Change PIN section
         item {
             Spacer(Modifier.height(16.dp))
@@ -213,6 +292,49 @@ fun PayerProfileScreen(rootNavController: NavController, viewModel: PayerViewMod
                 showChangePinDialog = false
                 authViewModel.resetChangePinState()
             }
+        )
+    }
+}
+
+@Composable
+private fun NotifToggleRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    iconTint: Color = BizcoTextSecondary,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(iconTint.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, color = BizcoTextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text(subtitle, color = BizcoTextSecondary, fontSize = 12.sp)
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = BizcoBlue,
+                uncheckedThumbColor = Color.White,
+                uncheckedTrackColor = BizcoBorder
+            )
         )
     }
 }
