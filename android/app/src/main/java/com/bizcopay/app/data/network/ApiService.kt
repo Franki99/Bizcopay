@@ -49,10 +49,10 @@ interface ApiService {
     suspend fun exportTransactions(): Response<ResponseBody>
 
     @GET("api/analytics/payer")
-    suspend fun getPayerAnalytics(): Response<PayerAnalyticsResponse>
+    suspend fun getPayerAnalytics(@Query("period") period: String = "year"): Response<PayerAnalyticsResponse>
 
     @GET("api/analytics/merchant")
-    suspend fun getMerchantAnalytics(): Response<MerchantAnalyticsResponse>
+    suspend fun getMerchantAnalytics(@Query("period") period: String = "year"): Response<MerchantAnalyticsResponse>
 
     @POST("api/nfc")
     suspend fun registerNfcToken(@Body body: RegisterNfcTokenRequest): Response<NfcTokenResponse>

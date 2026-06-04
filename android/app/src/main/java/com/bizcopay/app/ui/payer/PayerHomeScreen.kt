@@ -14,11 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.bizcopay.app.data.local.TokenManager
 import com.bizcopay.app.ui.theme.*
 import java.util.Calendar
@@ -54,6 +56,7 @@ fun PayerHomeScreen(
     val context = LocalContext.current
     val name    = remember { TokenManager(context).getName() ?: "User" }
     val greeting = remember { timeBasedGreeting() }
+    val profilePicUri = remember { TokenManager(context).getProfilePicUri() }
     val recentTxs = transactions.take(3)
 
     Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
@@ -81,16 +84,29 @@ fun PayerHomeScreen(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(CircleShape)
-                                    .border(2.dp, BizcoOrange, CircleShape)
-                                    .background(BizcoBlueDark),
+                                    .border(2.dp, BizcoOrange, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    name.take(1).uppercase(),
-                                    color = BizcoTextPrimary,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                if (profilePicUri != null) {
+                                    AsyncImage(
+                                        model = profilePicUri,
+                                        contentDescription = "Avatar",
+                                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize().background(BizcoBlueDark),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            name.take(1).uppercase(),
+                                            color = BizcoTextPrimary,
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
                             }
                         }
 

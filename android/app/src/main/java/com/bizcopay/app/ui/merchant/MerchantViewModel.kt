@@ -123,10 +123,10 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun loadAnalytics() {
+    fun loadAnalytics(period: String = "year") {
         viewModelScope.launch {
             try {
-                val r = api.getMerchantAnalytics()
+                val r = api.getMerchantAnalytics(period)
                 if (r.isSuccessful) _analytics.value = r.body()
             } catch (_: Exception) {} finally {
                 _analyticsLoaded.value = true

@@ -1,6 +1,9 @@
 package com.bizcopay.app.ui.payer
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -13,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -22,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.bizcopay.app.data.local.TokenManager
 import com.bizcopay.app.ui.auth.AuthViewModel
 import com.bizcopay.app.ui.navigation.Screen
@@ -40,6 +45,14 @@ fun PayerProfileScreen(rootNavController: NavController, viewModel: PayerViewMod
     val changePinState by authViewModel.changePinState.collectAsState()
 
     var showChangePinDialog by remember { mutableStateOf(false) }
+    var profilePicUri by remember { mutableStateOf(tokenManager.getProfilePicUri()) }
+
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            tokenManager.saveProfilePicUri(it.toString())
+            profilePicUri = it.toString()
+        }
+    }
 
     // Dismiss dialog on success
     LaunchedEffect(changePinState) {
@@ -66,17 +79,33 @@ fun PayerProfileScreen(rootNavController: NavController, viewModel: PayerViewMod
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(BizcoBlue),
+                        .clickable { launcher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        name.take(1).uppercase(),
-                        color = Color.White,
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (profilePicUri != null) {
+                        AsyncImage(
+                            model = profilePicUri,
+                            contentDescription = "Profile picture",
+                            modifier = Modifier.fillMaxSize().clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize().background(BizcoBlue),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                name.take(1).uppercase(),
+                                color = Color.White,
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(4.dp))
+                Text("Tap to change photo", color = BizcoTextMuted, fontSize = 11.sp)
+                Spacer(Modifier.height(8.dp))
                 Text(name, color = BizcoTextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Text(email, color = BizcoTextSecondary, fontSize = 14.sp)
             }

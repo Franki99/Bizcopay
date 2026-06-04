@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -15,50 +16,83 @@ import androidx.compose.ui.unit.sp
 import com.bizcopay.app.ui.payer.BizcoBarChart
 import com.bizcopay.app.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MerchantAnalyticsScreen(viewModel: MerchantViewModel) {
     val analytics by viewModel.analytics.collectAsState()
     val analyticsLoaded by viewModel.analyticsLoaded.collectAsState()
+    var selectedPeriod by remember { mutableStateOf("year") }
 
-    LaunchedEffect(Unit) { viewModel.loadAnalytics() }
+    LaunchedEffect(Unit) { viewModel.loadAnalytics(selectedPeriod) }
 
     Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
-        if (!analyticsLoaded) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = BizcoOrange)
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+        ) {
+            item {
+                Text(
+                    "Analytics",
+                    color = BizcoTextPrimary,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 20.dp)
+                )
             }
-        } else if (analytics == null) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("📊", fontSize = 48.sp)
-                    Spacer(Modifier.height(16.dp))
-                    Text("No insights yet", color = BizcoTextPrimary, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        "Complete transactions to see spending analytics",
-                        color = BizcoTextSecondary,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 40.dp)
-                    )
+
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("week" to "Week", "month" to "Month", "year" to "Year").forEach { (period, label) ->
+                        FilterChip(
+                            selected = selectedPeriod == period,
+                            onClick = {
+                                selectedPeriod = period
+                                viewModel.loadAnalytics(period)
+                            },
+                            label = { Text(label, fontSize = 13.sp) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = BizcoBlue,
+                                selectedLabelColor = Color.White,
+                                containerColor = BizcoSurface,
+                                labelColor = BizcoTextSecondary
+                            )
+                        )
+                    }
                 }
             }
-        } else {
-            val data = analytics!!
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp)
-            ) {
+
+            if (!analyticsLoaded) {
                 item {
-                    Text(
-                        "Analytics",
-                        color = BizcoTextPrimary,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 20.dp)
-                    )
+                    Box(Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = BizcoOrange)
+                    }
                 }
+            } else if (analytics == null) {
+                item {
+                    Box(Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("📊", fontSize = 48.sp)
+                            Spacer(Modifier.height(16.dp))
+                            Text("No insights yet", color = BizcoTextPrimary, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "Complete transactions to see spending analytics",
+                                color = BizcoTextSecondary,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 40.dp)
+                            )
+                        }
+                    }
+                }
+            } else {
+                val data = analytics!!
 
                 // Summary cards
                 item {

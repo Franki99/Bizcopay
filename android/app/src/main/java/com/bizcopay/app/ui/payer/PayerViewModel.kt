@@ -107,10 +107,10 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun loadAnalytics() {
+    fun loadAnalytics(period: String = "year") {
         viewModelScope.launch {
             try {
-                val r = api.getPayerAnalytics()
+                val r = api.getPayerAnalytics(period)
                 if (r.isSuccessful) _analytics.value = r.body()
             } catch (_: Exception) {} finally {
                 _analyticsLoaded.value = true
@@ -119,13 +119,13 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun categorizeTransaction(transactionId: String, category: String) {
-        // Optimistic update immediately
         _transactions.value = _transactions.value.map {
             if (it.id == transactionId) it.copy(category = category) else it
         }
         viewModelScope.launch {
             try {
                 api.categorizeTransaction(transactionId, CategoryRequest(category))
+                loadAnalytics() // refresh analytics so charts reflect new category
             } catch (_: Exception) {}
         }
     }
