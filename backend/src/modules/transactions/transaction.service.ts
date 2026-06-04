@@ -71,10 +71,9 @@ export async function resolveNfc(transactionId: string, nfcUid: string) {
       where: { id: transactionId },
       data: { status: TransactionStatus.FAILED, failureReason: `Fraud: ${fraud.ruleTriggered}` },
     })
-    io.to(`transaction:${transactionId}`).emit('payment:failed', {
-      transactionId,
-      reason: fraud.ruleTriggered,
-    })
+    const failedPayload = { transactionId, reason: fraud.ruleTriggered }
+    io.to(`transaction:${transactionId}`).emit('payment:failed', failedPayload)
+    io.to(`user:${payer.id}`).emit('payment:failed', failedPayload)
     return { status: TransactionStatus.FAILED, riskScore: fraud.riskScore }
   }
 
@@ -128,10 +127,10 @@ export async function approveWithPin(transactionId: string, pin: string) {
       where: { id: transactionId },
       data: { status: TransactionStatus.FAILED, failureReason: 'Insufficient balance' },
     })
-    getIO().to(`transaction:${transactionId}`).emit('payment:failed', {
-      transactionId,
-      reason: 'Insufficient balance',
-    })
+    const io = getIO()
+    const failedPayload = { transactionId, reason: 'Insufficient balance' }
+    io.to(`transaction:${transactionId}`).emit('payment:failed', failedPayload)
+    io.to(`user:${transaction.payerId}`).emit('payment:failed', failedPayload)
     throw new AppError(400, 'Insufficient balance')
   }
 
@@ -166,7 +165,11 @@ async function processPayment(
     prisma.transaction.update({ where: { id: transactionId }, data: { status: TransactionStatus.APPROVED } }),
   ])
 
-  getIO().to(`transaction:${transactionId}`).emit('payment:approved', { transactionId, amount })
+  const io = getIO()
+  const payload = { transactionId, amount }
+  io.to(`transaction:${transactionId}`).emit('payment:approved', payload)
+  io.to(`user:${payerId}`).emit('payment:approved', payload)
+  io.to(`user:${merchantId}`).emit('payment:received', payload)
 }
 
 export async function getMyTransactions(userId: string, role: string) {

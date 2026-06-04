@@ -33,6 +33,14 @@ class SocketManager(private val token: String) {
         socket.on("payment:pending_pin") { args -> callback(args[0] as JSONObject) }
     }
 
+    fun onWalletToppedUp(callback: (JSONObject) -> Unit) {
+        socket.on("wallet:topped_up") { args -> callback(args[0] as JSONObject) }
+    }
+
+    fun onPaymentReceived(callback: (JSONObject) -> Unit) {
+        socket.on("payment:received") { args -> callback(args[0] as JSONObject) }
+    }
+
     fun disconnect() {
         if (::socket.isInitialized) socket.disconnect()
     }

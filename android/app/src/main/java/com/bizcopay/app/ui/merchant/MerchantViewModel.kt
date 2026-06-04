@@ -10,6 +10,7 @@ import com.bizcopay.app.data.network.models.CreateTransactionRequest
 import com.bizcopay.app.data.network.models.MerchantAnalyticsResponse
 import com.bizcopay.app.data.network.models.NfcTapRequest
 import com.bizcopay.app.data.network.models.TransactionResponse
+import com.bizcopay.app.data.notification.NotificationHelper
 import com.bizcopay.app.data.socket.SocketManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,7 +29,11 @@ sealed class MerchantState {
 class MerchantViewModel(application: Application) : AndroidViewModel(application) {
     private val tokenManager = TokenManager(application)
     private val api = ApiClient.create(tokenManager)
-    private var socketManager: SocketManager? = null
+
+    // Persistent socket for merchant user-room notifications (payment:received)
+    private var persistentSocket: SocketManager? = null
+    // Transaction-specific socket for terminal flow
+    private var txSocket: SocketManager? = null
 
     private val _state = MutableStateFlow<MerchantState>(MerchantState.Idle)
     val state: StateFlow<MerchantState> = _state
@@ -42,6 +47,26 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
     private val _analyticsLoaded = MutableStateFlow(false)
     val analyticsLoaded: StateFlow<Boolean> = _analyticsLoaded
 
+    init {
+        loadHistory()
+        loadAnalytics()
+        connectPersistentSocket()
+    }
+
+    private fun connectPersistentSocket() {
+        val token = tokenManager.getToken() ?: return
+        val ctx = getApplication<Application>()
+        persistentSocket = SocketManager(token).also { mgr ->
+            mgr.connect()
+            mgr.onPaymentReceived { data ->
+                val amount = data.optString("amount", "?")
+                NotificationHelper.showPaymentReceived(ctx, amount)
+                loadHistory()
+                loadAnalytics()
+            }
+        }
+    }
+
     fun createTransaction(amount: Double, description: String) {
         viewModelScope.launch {
             _state.value = MerchantState.Loading
@@ -49,7 +74,7 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
                 val response = api.createTransaction(CreateTransactionRequest(amount, description.ifBlank { null }))
                 if (response.isSuccessful) {
                     val tx = response.body()!!
-                    connectSocket(tx.id)
+                    connectTxSocket(tx.id)
                     _state.value = MerchantState.WaitingForNfc(tx.id, tx.amount)
                 } else {
                     _state.value = MerchantState.Error("Failed to create transaction")
@@ -60,9 +85,6 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // Called when merchant's phone reads the NFC UID.
-    // On emulator: triggered by the "Simulate NFC Tap" button with a hardcoded UID.
-    // On physical device: replace with real NFC UID from NfcAdapter.
     fun onNfcRead(transactionId: String, nfcUid: String) {
         viewModelScope.launch {
             _state.value = MerchantState.Loading
@@ -71,17 +93,16 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
                 if (!response.isSuccessful) {
                     _state.value = MerchantState.Error("NFC tap failed — token not registered?")
                 }
-                // Approved/failed/pending_pin result arrives via socket
             } catch (e: Exception) {
                 _state.value = MerchantState.Error("Connection failed")
             }
         }
     }
 
-    private fun connectSocket(transactionId: String) {
+    private fun connectTxSocket(transactionId: String) {
         val token = tokenManager.getToken() ?: return
-        socketManager?.disconnect()
-        socketManager = SocketManager(token).also { mgr ->
+        txSocket?.disconnect()
+        txSocket = SocketManager(token).also { mgr ->
             mgr.connect()
             mgr.joinTransaction(transactionId)
             mgr.onPaymentApproved { data ->
@@ -107,7 +128,6 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
                 if (!response.isSuccessful) {
                     _state.value = MerchantState.Error("Incorrect PIN")
                 }
-                // Approved/failed result arrives via socket
             } catch (e: Exception) {
                 _state.value = MerchantState.Error("Connection failed")
             }
@@ -125,6 +145,7 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
 
     fun loadAnalytics(period: String = "year") {
         viewModelScope.launch {
+            _analyticsLoaded.value = false
             try {
                 val r = api.getMerchantAnalytics(period)
                 if (r.isSuccessful) _analytics.value = r.body()
@@ -135,13 +156,14 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun reset() {
-        socketManager?.disconnect()
-        socketManager = null
+        txSocket?.disconnect()
+        txSocket = null
         _state.value = MerchantState.Idle
     }
 
     override fun onCleared() {
         super.onCleared()
-        socketManager?.disconnect()
+        persistentSocket?.disconnect()
+        txSocket?.disconnect()
     }
 }

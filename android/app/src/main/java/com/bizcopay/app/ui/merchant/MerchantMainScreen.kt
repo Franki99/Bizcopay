@@ -5,7 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.List
 import androidx.compose.material.icons.rounded.Nfc
 import androidx.compose.material.icons.rounded.Person
@@ -27,10 +27,11 @@ import com.bizcopay.app.ui.theme.*
 fun MerchantMainScreen(rootNavController: NavController, viewModel: MerchantViewModel = viewModel()) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf(
-        "Terminal" to Icons.Rounded.Nfc,
-        "History" to Icons.Rounded.List,
+        "Home"      to Icons.Rounded.Home,
+        "Terminal"  to Icons.Rounded.Nfc,
+        "History"   to Icons.Rounded.List,
         "Analytics" to Icons.Rounded.TrendingUp,
-        "Profile" to Icons.Rounded.Person,
+        "Profile"   to Icons.Rounded.Person,
     )
 
     Scaffold(
@@ -55,13 +56,13 @@ fun MerchantMainScreen(rootNavController: NavController, viewModel: MerchantView
                             modifier = Modifier
                                 .clip(RoundedCornerShape(16.dp))
                                 .clickable { selectedTab = i }
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(44.dp)
-                                    .clip(RoundedCornerShape(14.dp))
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
                                     .background(if (i == selectedTab) BizcoBlue else BizcoSurface),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -69,7 +70,7 @@ fun MerchantMainScreen(rootNavController: NavController, viewModel: MerchantView
                                     imageVector = icon,
                                     contentDescription = label,
                                     tint = if (i == selectedTab) Color.White else BizcoTextSecondary,
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                             Spacer(Modifier.height(4.dp))
@@ -87,10 +88,15 @@ fun MerchantMainScreen(rootNavController: NavController, viewModel: MerchantView
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                0 -> MerchantTerminalScreen(rootNavController, viewModel)
-                1 -> MerchantHistoryScreen(viewModel)
-                2 -> MerchantAnalyticsScreen(viewModel)
-                3 -> MerchantProfileScreen(rootNavController, viewModel)
+                0 -> MerchantHomeScreen(
+                    viewModel = viewModel,
+                    onGoToTerminal = { selectedTab = 1 },
+                    onGoToHistory  = { selectedTab = 2 }
+                )
+                1 -> MerchantTerminalScreen(rootNavController, viewModel)
+                2 -> MerchantHistoryScreen(viewModel)
+                3 -> MerchantAnalyticsScreen(viewModel)
+                4 -> MerchantProfileScreen(rootNavController, viewModel)
             }
         }
     }

@@ -12,6 +12,7 @@ import com.bizcopay.app.data.network.models.RegisterNfcTokenRequest
 import com.bizcopay.app.data.network.models.TransactionResponse
 import com.bizcopay.app.data.network.models.WalletResponse
 import com.bizcopay.app.data.nfc.NfcEventBus
+import com.bizcopay.app.data.notification.NotificationHelper
 import com.bizcopay.app.data.socket.SocketManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -132,15 +133,25 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun connectSocket() {
         val token = tokenManager.getToken() ?: return
+        val ctx = getApplication<Application>()
         socketManager = SocketManager(token).also { mgr ->
             mgr.connect()
             mgr.onPaymentApproved { data ->
-                _state.value = PayerState.Approved(data.optString("amount", "?"))
+                val amount = data.optString("amount", "?")
+                _state.value = PayerState.Approved(amount)
                 loadWallet()
                 loadTransactions()
+                NotificationHelper.showPaymentApproved(ctx, amount)
             }
             mgr.onPaymentFailed { data ->
-                _state.value = PayerState.Failed(data.optString("reason", "Unknown reason"))
+                val reason = data.optString("reason", "Unknown reason")
+                _state.value = PayerState.Failed(reason)
+                NotificationHelper.showPaymentFailed(ctx, reason)
+            }
+            mgr.onWalletToppedUp { data ->
+                val amount = data.optString("amount", "?")
+                loadWallet()
+                NotificationHelper.showWalletToppedUp(ctx, amount)
             }
         }
     }

@@ -5,31 +5,54 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bizcopay.app.data.local.StatementHelper
 import com.bizcopay.app.ui.theme.*
 
 @Composable
 fun MerchantHistoryScreen(viewModel: MerchantViewModel) {
     val history by viewModel.history.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) { viewModel.loadHistory() }
 
     Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
-                Text(
-                    "Sales History",
-                    color = BizcoTextPrimary,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Sales History",
+                        color = BizcoTextPrimary,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (history.isNotEmpty()) {
+                        IconButton(onClick = {
+                            StatementHelper.exportAndShare(context, history, "MERCHANT")
+                        }) {
+                            Icon(
+                                imageVector = Icons.Rounded.FileDownload,
+                                contentDescription = "Download statement",
+                                tint = BizcoBlue
+                            )
+                        }
+                    }
+                }
             }
 
             if (history.isEmpty()) {

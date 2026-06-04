@@ -7,15 +7,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bizcopay.app.data.local.StatementHelper
 import com.bizcopay.app.data.network.models.TransactionResponse
 import com.bizcopay.app.ui.theme.*
 import java.util.Calendar
@@ -24,6 +28,7 @@ import java.util.Calendar
 fun PayerHistoryScreen(viewModel: PayerViewModel) {
     val transactions by viewModel.transactions.collectAsState()
     var selected by remember { mutableStateOf<TransactionResponse?>(null) }
+    val context = LocalContext.current
 
     // Group by date (first 10 chars of createdAt ISO string = YYYY-MM-DD)
     val grouped = transactions.groupBy { it.createdAt.take(10) }
@@ -31,13 +36,31 @@ fun PayerHistoryScreen(viewModel: PayerViewModel) {
     Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
-                Text(
-                    "Transaction History",
-                    color = BizcoTextPrimary,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Transaction History",
+                        color = BizcoTextPrimary,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (transactions.isNotEmpty()) {
+                        IconButton(onClick = {
+                            StatementHelper.exportAndShare(context, transactions, "PAYER")
+                        }) {
+                            Icon(
+                                imageVector = Icons.Rounded.FileDownload,
+                                contentDescription = "Download statement",
+                                tint = BizcoBlue
+                            )
+                        }
+                    }
+                }
             }
 
             if (transactions.isEmpty()) {
