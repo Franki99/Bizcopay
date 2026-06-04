@@ -13,6 +13,7 @@ import com.bizcopay.app.data.network.models.TransactionResponse
 import com.bizcopay.app.data.network.models.WalletResponse
 import com.bizcopay.app.data.nfc.NfcEventBus
 import com.bizcopay.app.data.notification.NotificationHelper
+import com.bizcopay.app.data.notification.NotificationStore
 import com.bizcopay.app.data.socket.SocketManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,6 +64,7 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
     val analyticsLoaded: StateFlow<Boolean> = _analyticsLoaded
 
     init {
+        NotificationStore.init(getApplication())
         loadWallet()
         loadTokens()
         loadTransactions()
@@ -142,16 +144,19 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
                 loadWallet()
                 loadTransactions()
                 NotificationHelper.showPaymentApproved(ctx, amount)
+                NotificationStore.add("Payment Successful", "RWF $amount was deducted from your wallet", "payment")
             }
             mgr.onPaymentFailed { data ->
                 val reason = data.optString("reason", "Unknown reason")
                 _state.value = PayerState.Failed(reason)
                 NotificationHelper.showPaymentFailed(ctx, reason)
+                NotificationStore.add("Payment Failed", reason, "payment")
             }
             mgr.onWalletToppedUp { data ->
                 val amount = data.optString("amount", "?")
                 loadWallet()
                 NotificationHelper.showWalletToppedUp(ctx, amount)
+                NotificationStore.add("Wallet Topped Up", "RWF $amount has been added to your wallet", "wallet")
             }
         }
     }

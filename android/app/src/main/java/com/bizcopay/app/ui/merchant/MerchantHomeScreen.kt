@@ -2,6 +2,7 @@ package com.bizcopay.app.ui.merchant
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Nfc
 import androidx.compose.material.icons.rounded.Notifications
+import com.bizcopay.app.data.notification.NotificationStore
+import com.bizcopay.app.ui.common.NotificationsSheet
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,12 +43,19 @@ fun MerchantHomeScreen(
     onGoToTerminal: () -> Unit,
     onGoToHistory: () -> Unit,
 ) {
-    val history    by viewModel.history.collectAsState()
-    val analytics  by viewModel.analytics.collectAsState()
+    val history       by viewModel.history.collectAsState()
+    val analytics     by viewModel.analytics.collectAsState()
+    val notifications by NotificationStore.notifications.collectAsState()
+    val unreadCount   = notifications.count { !it.isRead }
     val context    = LocalContext.current
     val name       = remember { TokenManager(context).getName() ?: "Merchant" }
     val greeting   = remember { merchantGreeting() }
     val recentSales = history.take(5)
+    var showNotifications by remember { mutableStateOf(false) }
+
+    if (showNotifications) {
+        NotificationsSheet(onDismiss = { showNotifications = false })
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -91,7 +101,11 @@ fun MerchantHomeScreen(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.15f)),
+                                    .background(Color.White.copy(alpha = 0.15f))
+                                    .clickable {
+                                        showNotifications = true
+                                        NotificationStore.markAllRead()
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
@@ -100,6 +114,23 @@ fun MerchantHomeScreen(
                                     tint = BizcoOnDark,
                                     modifier = Modifier.size(22.dp)
                                 )
+                                if (unreadCount > 0) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .clip(CircleShape)
+                                            .background(BizcoError)
+                                            .align(Alignment.TopEnd),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = if (unreadCount > 9) "9+" else unreadCount.toString(),
+                                            color = Color.White,
+                                            fontSize = 8.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
                             }
                         }
 

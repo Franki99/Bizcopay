@@ -11,6 +11,7 @@ import com.bizcopay.app.data.network.models.MerchantAnalyticsResponse
 import com.bizcopay.app.data.network.models.NfcTapRequest
 import com.bizcopay.app.data.network.models.TransactionResponse
 import com.bizcopay.app.data.notification.NotificationHelper
+import com.bizcopay.app.data.notification.NotificationStore
 import com.bizcopay.app.data.socket.SocketManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -48,6 +49,7 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
     val analyticsLoaded: StateFlow<Boolean> = _analyticsLoaded
 
     init {
+        NotificationStore.init(getApplication())
         loadHistory()
         loadAnalytics()
         connectPersistentSocket()
@@ -61,6 +63,7 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
             mgr.onPaymentReceived { data ->
                 val amount = data.optString("amount", "?")
                 NotificationHelper.showPaymentReceived(ctx, amount)
+                NotificationStore.add("Payment Received", "You received RWF $amount", "payment")
                 loadHistory()
                 loadAnalytics()
             }

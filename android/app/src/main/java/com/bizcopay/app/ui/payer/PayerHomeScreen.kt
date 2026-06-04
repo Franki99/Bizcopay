@@ -2,6 +2,7 @@
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.*
+import com.bizcopay.app.data.notification.NotificationStore
+import com.bizcopay.app.ui.common.NotificationsSheet
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,15 +54,18 @@ fun PayerHomeScreen(
     viewModel: PayerViewModel,
     onGoToHistory: () -> Unit,
 ) {
-    val state        by viewModel.state.collectAsState()
-    val wallet       by viewModel.wallet.collectAsState()
-    val transactions by viewModel.transactions.collectAsState()
-    val analytics    by viewModel.analytics.collectAsState()
+    val state         by viewModel.state.collectAsState()
+    val wallet        by viewModel.wallet.collectAsState()
+    val transactions  by viewModel.transactions.collectAsState()
+    val analytics     by viewModel.analytics.collectAsState()
+    val notifications by NotificationStore.notifications.collectAsState()
+    val unreadCount   = notifications.count { !it.isRead }
     val context = LocalContext.current
     val name    = remember { TokenManager(context).getName() ?: "User" }
     val greeting = remember { timeBasedGreeting() }
     val profilePicUri = remember { TokenManager(context).getProfilePicUri() }
     val recentTxs = transactions.take(3)
+    var showNotifications by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -113,12 +119,16 @@ fun PayerHomeScreen(
                                     Text(name, color = BizcoOnDark, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
-                            // Notification bell
+                            // Notification bell with badge
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.15f)),
+                                    .background(Color.White.copy(alpha = 0.15f))
+                                    .clickable {
+                                        showNotifications = true
+                                        NotificationStore.markAllRead()
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
@@ -127,6 +137,23 @@ fun PayerHomeScreen(
                                     tint = BizcoOnDark,
                                     modifier = Modifier.size(22.dp)
                                 )
+                                if (unreadCount > 0) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .clip(CircleShape)
+                                            .background(BizcoError)
+                                            .align(Alignment.TopEnd),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = if (unreadCount > 9) "9+" else unreadCount.toString(),
+                                            color = Color.White,
+                                            fontSize = 8.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -229,6 +256,11 @@ fun PayerHomeScreen(
             }
 
             item { Spacer(Modifier.height(24.dp)) }
+        }
+
+        // Notifications sheet
+        if (showNotifications) {
+            NotificationsSheet(onDismiss = { showNotifications = false })
         }
 
         // Payment result overlay

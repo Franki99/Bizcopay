@@ -21,8 +21,14 @@ object StatementHelper {
     private const val PAGE_HEIGHT = 842
     private const val MARGIN      = 48f
 
-    fun exportAndShare(context: Context, transactions: List<TransactionResponse>, role: String) {
-        val pdf = buildPdf(transactions, role)
+    fun exportAndShare(
+        context: Context,
+        transactions: List<TransactionResponse>,
+        role: String,
+        ownerName: String = "",
+        ownerEmail: String = "",
+    ) {
+        val pdf = buildPdf(transactions, role, ownerName, ownerEmail)
         val dir = File(context.getExternalFilesDir("Documents"), "").also { it.mkdirs() }
         val file = File(dir, "bizcopay_statement_${System.currentTimeMillis()}.pdf")
         FileOutputStream(file).use { pdf.writeTo(it) }
@@ -39,7 +45,12 @@ object StatementHelper {
         context.startActivity(chooser)
     }
 
-    private fun buildPdf(transactions: List<TransactionResponse>, role: String): PdfDocument {
+    private fun buildPdf(
+        transactions: List<TransactionResponse>,
+        role: String,
+        ownerName: String,
+        ownerEmail: String,
+    ): PdfDocument {
         val doc = PdfDocument()
         val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, 1).create()
         val page = doc.startPage(pageInfo)
@@ -61,15 +72,23 @@ object StatementHelper {
         val title = if (role == "MERCHANT") "Sales Statement" else "Transaction Statement"
         canvas.drawText(title, MARGIN, y + 24f, bold)
 
+        // Owner info
+        normal.textSize = 11f
+        normal.color = Color.rgb(13, 27, 54)
+        if (ownerName.isNotBlank()) canvas.drawText(ownerName, MARGIN, y + 44f, normal)
+        normal.textSize = 10f
+        normal.color = Color.rgb(90, 106, 133)
+        if (ownerEmail.isNotBlank()) canvas.drawText(ownerEmail, MARGIN, y + 59f, normal)
+
         val dateStr = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
         normal.textSize = 10f
         normal.color = Color.rgb(154, 170, 191)
-        canvas.drawText("Generated: $dateStr", MARGIN, y + 42f, normal)
+        canvas.drawText("Generated: $dateStr", MARGIN, y + 74f, normal)
 
         // Divider
         val divPaint = Paint().apply { color = Color.rgb(221, 227, 238); strokeWidth = 1f }
-        canvas.drawLine(MARGIN, y + 56f, PAGE_WIDTH - MARGIN, y + 56f, divPaint)
-        y += 74f
+        canvas.drawLine(MARGIN, y + 88f, PAGE_WIDTH - MARGIN, y + 88f, divPaint)
+        y += 106f
 
         // ── Summary ───────────────────────────────────────────────────────────
         val approved = transactions.filter { it.status == "APPROVED" }

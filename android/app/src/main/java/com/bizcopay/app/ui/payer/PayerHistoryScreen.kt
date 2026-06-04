@@ -29,6 +29,9 @@ fun PayerHistoryScreen(viewModel: PayerViewModel) {
     val transactions by viewModel.transactions.collectAsState()
     var selected by remember { mutableStateOf<TransactionResponse?>(null) }
     val context = LocalContext.current
+    val tokenManager = remember { com.bizcopay.app.data.local.TokenManager(context) }
+    val ownerName  = remember { tokenManager.getName() ?: "" }
+    val ownerEmail = remember { tokenManager.getEmail() ?: "" }
 
     // Group by date (first 10 chars of createdAt ISO string = YYYY-MM-DD)
     val grouped = transactions.groupBy { it.createdAt.take(10) }
@@ -51,7 +54,7 @@ fun PayerHistoryScreen(viewModel: PayerViewModel) {
                     )
                     if (transactions.isNotEmpty()) {
                         IconButton(onClick = {
-                            StatementHelper.exportAndShare(context, transactions, "PAYER")
+                            StatementHelper.exportAndShare(context, transactions, "PAYER", ownerName, ownerEmail)
                         }) {
                             Icon(
                                 imageVector = Icons.Rounded.FileDownload,

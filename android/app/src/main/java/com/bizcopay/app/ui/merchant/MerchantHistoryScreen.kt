@@ -22,6 +22,9 @@ import com.bizcopay.app.ui.theme.*
 fun MerchantHistoryScreen(viewModel: MerchantViewModel) {
     val history by viewModel.history.collectAsState()
     val context = LocalContext.current
+    val tokenManager = remember { com.bizcopay.app.data.local.TokenManager(context) }
+    val ownerName  = remember { tokenManager.getName() ?: "" }
+    val ownerEmail = remember { tokenManager.getEmail() ?: "" }
 
     LaunchedEffect(Unit) { viewModel.loadHistory() }
 
@@ -43,7 +46,7 @@ fun MerchantHistoryScreen(viewModel: MerchantViewModel) {
                     )
                     if (history.isNotEmpty()) {
                         IconButton(onClick = {
-                            StatementHelper.exportAndShare(context, history, "MERCHANT")
+                            StatementHelper.exportAndShare(context, history, "MERCHANT", ownerName, ownerEmail)
                         }) {
                             Icon(
                                 imageVector = Icons.Rounded.FileDownload,
