@@ -1,4 +1,4 @@
-package com.bizcopay.app.ui.payer
+﻿package com.bizcopay.app.ui.payer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -77,14 +77,14 @@ fun PayerHomeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text(greeting, color = BizcoTextSecondary.copy(alpha = 0.8f), fontSize = 14.sp)
-                                Text(name, color = BizcoTextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                Text(greeting, color = BizcoOnDark.copy(alpha = 0.65f), fontSize = 14.sp)
+                                Text(name, color = BizcoOnDark, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                             }
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(CircleShape)
-                                    .border(2.dp, BizcoOrange, CircleShape),
+                                    .border(2.dp, BizcoGreen, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (profilePicUri != null) {
@@ -101,7 +101,7 @@ fun PayerHomeScreen(
                                     ) {
                                         Text(
                                             name.take(1).uppercase(),
-                                            color = BizcoTextPrimary,
+                                            color = BizcoOnDark,
                                             fontSize = 20.sp,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -117,7 +117,7 @@ fun PayerHomeScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color.White.copy(alpha = 0.05f)
+                                containerColor = Color.White.copy(alpha = 0.12f)
                             )
                         ) {
                             Column(modifier = Modifier.padding(20.dp)) {
@@ -128,21 +128,21 @@ fun PayerHomeScreen(
                                 ) {
                                     Text(
                                         "Active Balance",
-                                        color = BizcoTextSecondary.copy(alpha = 0.8f),
+                                        color = BizcoOnDark.copy(alpha = 0.65f),
                                         fontSize = 13.sp
                                     )
-                                    Text("👁", fontSize = 16.sp)
+                                    Text("ðŸ‘", fontSize = 16.sp)
                                 }
                                 Spacer(Modifier.height(6.dp))
                                 wallet?.let {
                                     Text(
                                         "${it.currency} ${"%,.0f".format(it.balance.toDouble())}",
-                                        color = BizcoTextPrimary,
+                                        color = BizcoOnDark,
                                         fontSize = 38.sp,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = (-1).sp
                                     )
-                                } ?: Text("—", color = BizcoTextPrimary, fontSize = 38.sp, fontWeight = FontWeight.Bold)
+                                } ?: Text("â€”", color = BizcoOnDark, fontSize = 38.sp, fontWeight = FontWeight.Bold)
                             }
                         }
 
@@ -185,7 +185,7 @@ fun PayerHomeScreen(
                         fontWeight = FontWeight.SemiBold
                     )
                     TextButton(onClick = onGoToHistory) {
-                        Text("View all", color = BizcoOrange, fontSize = 13.sp)
+                        Text("View all", color = BizcoBlue, fontSize = 13.sp)
                     }
                 }
             }
@@ -230,12 +230,12 @@ private fun StatChip(label: String, value: String, modifier: Modifier = Modifier
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.08f))
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.12f))
     ) {
         Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-            Text(label, color = BizcoTextSecondary.copy(alpha = 0.8f), fontSize = 11.sp)
+            Text(label, color = BizcoOnDark.copy(alpha = 0.65f), fontSize = 11.sp)
             Spacer(Modifier.height(2.dp))
-            Text(value, color = BizcoTextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text(value, color = BizcoOnDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -317,7 +317,7 @@ fun PaymentResultCard(state: PayerState, onDismiss: () -> Unit) {
         ) {
             when (state) {
                 is PayerState.Approved -> {
-                    Text("✓", fontSize = 48.sp, color = BizcoSuccess)
+                    Text("âœ“", fontSize = 48.sp, color = BizcoSuccess)
                     Spacer(Modifier.height(12.dp))
                     Text("Payment Successful", color = BizcoTextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(4.dp))
@@ -328,7 +328,7 @@ fun PaymentResultCard(state: PayerState, onDismiss: () -> Unit) {
                     )
                 }
                 is PayerState.Failed -> {
-                    Text("✕", fontSize = 48.sp, color = BizcoError)
+                    Text("âœ•", fontSize = 48.sp, color = BizcoError)
                     Spacer(Modifier.height(12.dp))
                     Text("Payment Failed", color = BizcoTextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(4.dp))
@@ -348,3 +348,4 @@ fun PaymentResultCard(state: PayerState, onDismiss: () -> Unit) {
         }
     }
 }
+

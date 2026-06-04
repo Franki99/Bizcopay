@@ -1,4 +1,4 @@
-package com.bizcopay.app.ui.payer
+﻿package com.bizcopay.app.ui.payer
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -77,14 +77,14 @@ fun PayerInsightsScreen(viewModel: PayerViewModel) {
             if (!analyticsLoaded) {
                 item {
                     Box(Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = BizcoOrange)
+                        CircularProgressIndicator(color = BizcoGreen)
                     }
                 }
             } else if (analytics == null) {
                 item {
                     Box(Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("📊", fontSize = 48.sp)
+                            Text("ðŸ“Š", fontSize = 48.sp)
                             Spacer(Modifier.height(16.dp))
                             Text("No insights yet", color = BizcoTextPrimary, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(8.dp))
@@ -119,7 +119,7 @@ fun PayerInsightsScreen(viewModel: PayerViewModel) {
                             Spacer(Modifier.height(4.dp))
                             Text(
                                 "This month: RWF ${"%,.0f".format(data.thisMonth)}",
-                                color = BizcoOrange,
+                                color = BizcoGreen,
                                 fontSize = 13.sp
                             )
                         }
@@ -185,7 +185,7 @@ fun PayerInsightsScreen(viewModel: PayerViewModel) {
                                             (cat.amount / data.totalSpent * 100).toInt() else 0
                                         Text(
                                             "$pct%",
-                                            color = BizcoOrange,
+                                            color = BizcoGreen,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -287,7 +287,7 @@ fun BizcoBarChart(data: List<Pair<String, Float>>, modifier: Modifier = Modifier
                 val barH = (v / maxVal) * (size.height - 8f)
                 val x = i * (barW + barW) + barW / 2f
                 drawRoundRect(
-                    color = BizcoOrange,
+                    color = BizcoGreen,
                     topLeft = Offset(x, size.height - barH),
                     size = Size(barW, barH),
                     cornerRadius = CornerRadius(6f, 6f)
@@ -304,3 +304,4 @@ fun BizcoBarChart(data: List<Pair<String, Float>>, modifier: Modifier = Modifier
         }
     }
 }
+

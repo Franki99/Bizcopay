@@ -1,4 +1,4 @@
-package com.bizcopay.app.ui.splash
+﻿package com.bizcopay.app.ui.splash
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -61,7 +61,7 @@ fun SplashScreen(navController: NavController) {
                     modifier = Modifier
                         .size(if (i == page) 24.dp else 8.dp, 8.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(if (i == page) BizcoOrange else BizcoTextMuted)
+                        .background(if (i == page) BizcoBlue else BizcoTextMuted)
                 )
             }
         }
@@ -81,15 +81,15 @@ private fun SplashPage1(onNext: () -> Unit) {
             modifier = Modifier
                 .size(120.dp)
                 .clip(CircleShape)
-                .background(BizcoOrange.copy(alpha = 0.15f)),
+                .background(BizcoBlue.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
         ) {
-            Text("📡", fontSize = 48.sp)
+            Text("ðŸ“¡", fontSize = 48.sp)
         }
         Spacer(Modifier.height(48.dp))
         Text(
             "Bizcopay",
-            color = BizcoTextPrimary,
+            color = BizcoOnDark,
             fontSize = 40.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = (-1).sp
@@ -97,7 +97,7 @@ private fun SplashPage1(onNext: () -> Unit) {
         Spacer(Modifier.height(12.dp))
         Text(
             "Seamless contactless payments\nat your fingertips",
-            color = BizcoTextSecondary,
+            color = BizcoOnDark.copy(alpha = 0.65f),
             fontSize = 16.sp,
             textAlign = TextAlign.Center,
             lineHeight = 24.sp
@@ -109,7 +109,7 @@ private fun SplashPage1(onNext: () -> Unit) {
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BizcoOrange)
+            colors = ButtonDefaults.buttonColors(containerColor = BizcoBlue)
         ) { Text("Next", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp) }
     }
 }
@@ -130,21 +130,21 @@ private fun SplashPage2(onGetStarted: () -> Unit) {
                 .background(BizcoBlue.copy(alpha = 0.3f)),
             contentAlignment = Alignment.Center
         ) {
-            Text("💳", fontSize = 48.sp)
+            Text("ðŸ’³", fontSize = 48.sp)
         }
         Spacer(Modifier.height(48.dp))
         Text(
             "Smart & Secure",
-            color = BizcoTextPrimary,
+            color = BizcoOnDark,
             fontSize = 36.sp,
             fontWeight = FontWeight.Bold
         )
         Spacer(Modifier.height(12.dp))
-        FeatureRow("🔒", "AI-powered fraud detection")
+        FeatureRow("ðŸ”’", "AI-powered fraud detection")
         Spacer(Modifier.height(12.dp))
-        FeatureRow("📊", "Real-time spending insights")
+        FeatureRow("ðŸ“Š", "Real-time spending insights")
         Spacer(Modifier.height(12.dp))
-        FeatureRow("📱", "Tap & pay with NFC ring or card")
+        FeatureRow("ðŸ“±", "Tap & pay with NFC ring or card")
         Spacer(Modifier.height(64.dp))
         Button(
             onClick = onGetStarted,
@@ -152,7 +152,7 @@ private fun SplashPage2(onGetStarted: () -> Unit) {
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BizcoOrange)
+            colors = ButtonDefaults.buttonColors(containerColor = BizcoBlue)
         ) { Text("Get Started", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp) }
     }
 }
@@ -163,12 +163,13 @@ private fun FeatureRow(emoji: String, text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(BizcoCard)
+            .background(Color.White.copy(alpha = 0.12f))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(emoji, fontSize = 24.sp)
         Spacer(Modifier.width(16.dp))
-        Text(text, color = BizcoTextPrimary, fontSize = 15.sp)
+        Text(text, color = BizcoOnDark, fontSize = 15.sp)
     }
 }
+

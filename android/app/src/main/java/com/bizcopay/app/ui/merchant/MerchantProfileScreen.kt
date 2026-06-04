@@ -1,4 +1,4 @@
-package com.bizcopay.app.ui.merchant
+﻿package com.bizcopay.app.ui.merchant
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -102,10 +102,10 @@ fun MerchantProfileScreen(rootNavController: NavController, viewModel: MerchantV
         Card(
             modifier = Modifier.wrapContentWidth(),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = BizcoOrange.copy(alpha = 0.15f))
+            colors = CardDefaults.cardColors(containerColor = BizcoBlue.copy(alpha = 0.15f))
         ) {
             Box(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                Text("MERCHANT", color = BizcoOrange, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("MERCHANT", color = BizcoBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
         }
         Spacer(Modifier.weight(1f))
@@ -122,7 +122,7 @@ fun MerchantProfileScreen(rootNavController: NavController, viewModel: MerchantV
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(containerColor = BizcoCard)
         ) {
-            Text("Change PIN", color = BizcoOrange, fontWeight = FontWeight.SemiBold)
+            Text("Change PIN", color = BizcoBlue, fontWeight = FontWeight.SemiBold)
         }
         Spacer(Modifier.height(12.dp))
 
@@ -182,11 +182,11 @@ private fun MerchantChangePinDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = BizcoOrange,
+                        focusedBorderColor = BizcoBlue,
                         unfocusedBorderColor = BizcoBorder,
                         focusedTextColor = BizcoTextPrimary,
                         unfocusedTextColor = BizcoTextPrimary,
-                        cursorColor = BizcoOrange
+                        cursorColor = BizcoBlue
                     )
                 )
                 Spacer(Modifier.height(12.dp))
@@ -199,11 +199,11 @@ private fun MerchantChangePinDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = BizcoOrange,
+                        focusedBorderColor = BizcoBlue,
                         unfocusedBorderColor = BizcoBorder,
                         focusedTextColor = BizcoTextPrimary,
                         unfocusedTextColor = BizcoTextPrimary,
-                        cursorColor = BizcoOrange
+                        cursorColor = BizcoBlue
                     )
                 )
                 if (isError) {
@@ -218,9 +218,9 @@ private fun MerchantChangePinDialog(
                 enabled = canConfirm
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = BizcoOrange, strokeWidth = 2.dp)
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = BizcoBlue, strokeWidth = 2.dp)
                 } else {
-                    Text("Confirm", color = if (canConfirm) BizcoOrange else BizcoTextMuted, fontWeight = FontWeight.SemiBold)
+                    Text("Confirm", color = if (canConfirm) BizcoBlue else BizcoTextMuted, fontWeight = FontWeight.SemiBold)
                 }
             }
         },
@@ -231,3 +231,4 @@ private fun MerchantChangePinDialog(
         }
     )
 }
+

@@ -1,4 +1,4 @@
-package com.bizcopay.app.ui.merchant
+﻿package com.bizcopay.app.ui.merchant
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -70,14 +70,14 @@ fun MerchantAnalyticsScreen(viewModel: MerchantViewModel) {
             if (!analyticsLoaded) {
                 item {
                     Box(Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = BizcoOrange)
+                        CircularProgressIndicator(color = BizcoBlue)
                     }
                 }
             } else if (analytics == null) {
                 item {
                     Box(Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("📊", fontSize = 48.sp)
+                            Text("ðŸ“Š", fontSize = 48.sp)
                             Spacer(Modifier.height(16.dp))
                             Text("No insights yet", color = BizcoTextPrimary, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(8.dp))
@@ -213,3 +213,4 @@ fun StatCard(label: String, value: String, modifier: Modifier = Modifier) {
         }
     }
 }
+

@@ -1,4 +1,4 @@
-package com.bizcopay.app.ui.auth
+﻿package com.bizcopay.app.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -60,7 +60,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                         shape = RoundedCornerShape(18.dp)
                     ),
                 contentAlignment = Alignment.Center
-            ) { Text("📡", fontSize = 28.sp) }
+            ) { Text("ðŸ“¡", fontSize = 28.sp) }
             Spacer(Modifier.height(20.dp))
             Text(
                 if (!otpSent) "Create Account" else "Verify Email",
@@ -133,7 +133,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                 )
                 Spacer(Modifier.height(8.dp))
                 TextButton(onClick = { viewModel.sendRegistrationOtp(email.trim()) }) {
-                    Text("Resend code", color = BizcoOrange, fontSize = 13.sp)
+                    Text("Resend code", color = BizcoBlue, fontSize = 13.sp)
                 }
             }
 
@@ -178,9 +178,10 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                     onClick = { navController.popBackStack() },
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text("Sign In", color = BizcoOrange, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Sign In", color = BizcoBlue, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
     }
 }
+

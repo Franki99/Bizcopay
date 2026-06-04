@@ -1,4 +1,4 @@
-package com.bizcopay.app.ui.auth
+﻿package com.bizcopay.app.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -56,7 +56,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
                         shape = RoundedCornerShape(20.dp)
                     ),
                 contentAlignment = Alignment.Center
-            ) { Text("📡", fontSize = 32.sp) }
+            ) { Text("ðŸ“¡", fontSize = 32.sp) }
             Spacer(Modifier.height(24.dp))
             Text("Welcome Back!", color = BizcoTextPrimary, fontSize = 28.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
@@ -85,7 +85,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
             Spacer(Modifier.height(8.dp))
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                 TextButton(onClick = { navController.navigate(Screen.ResetPin.route) }) {
-                    Text("Forgot PIN?", color = BizcoOrange, fontSize = 13.sp)
+                    Text("Forgot PIN?", color = BizcoBlue, fontSize = 13.sp)
                 }
             }
             Spacer(Modifier.height(24.dp))
@@ -120,7 +120,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
                     onClick = { navController.navigate(Screen.Register.route) },
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text("Register", color = BizcoOrange, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Register", color = BizcoBlue, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -151,7 +151,8 @@ fun BizcoTextField(
             unfocusedContainerColor  = BizcoCard,
             focusedTextColor      = BizcoTextPrimary,
             unfocusedTextColor    = BizcoTextPrimary,
-            cursorColor           = BizcoOrange,
+            cursorColor           = BizcoBlue,
         )
     )
 }
+

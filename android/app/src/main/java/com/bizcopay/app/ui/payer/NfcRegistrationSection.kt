@@ -1,4 +1,4 @@
-package com.bizcopay.app.ui.payer
+﻿package com.bizcopay.app.ui.payer
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -53,7 +53,7 @@ fun NfcRegistrationSection(
                     )
                     Spacer(Modifier.height(16.dp))
                     TextButton(onClick = onCancel) {
-                        Text("Cancel", color = BizcoOrange)
+                        Text("Cancel", color = BizcoBlue)
                     }
                 }
             }
@@ -147,3 +147,4 @@ fun NfcRegistrationSection(
         }
     }
 }
+

@@ -1,4 +1,4 @@
-package com.bizcopay.app.ui.payer
+﻿package com.bizcopay.app.ui.payer
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -134,7 +134,7 @@ fun PayerProfileScreen(rootNavController: NavController, viewModel: PayerViewMod
                         Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("📱", fontSize = 24.sp)
+                        Text("ðŸ“±", fontSize = 24.sp)
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(
@@ -184,7 +184,7 @@ fun PayerProfileScreen(rootNavController: NavController, viewModel: PayerViewMod
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = BizcoCard)
             ) {
-                Text("Change PIN", color = BizcoOrange, fontWeight = FontWeight.SemiBold)
+                Text("Change PIN", color = BizcoBlue, fontWeight = FontWeight.SemiBold)
             }
         }
 
@@ -246,11 +246,11 @@ private fun ChangePinDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = BizcoOrange,
+                        focusedBorderColor = BizcoBlue,
                         unfocusedBorderColor = BizcoBorder,
                         focusedTextColor = BizcoTextPrimary,
                         unfocusedTextColor = BizcoTextPrimary,
-                        cursorColor = BizcoOrange
+                        cursorColor = BizcoBlue
                     )
                 )
                 Spacer(Modifier.height(12.dp))
@@ -263,11 +263,11 @@ private fun ChangePinDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = BizcoOrange,
+                        focusedBorderColor = BizcoBlue,
                         unfocusedBorderColor = BizcoBorder,
                         focusedTextColor = BizcoTextPrimary,
                         unfocusedTextColor = BizcoTextPrimary,
-                        cursorColor = BizcoOrange
+                        cursorColor = BizcoBlue
                     )
                 )
                 if (isError) {
@@ -282,9 +282,9 @@ private fun ChangePinDialog(
                 enabled = canConfirm
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = BizcoOrange, strokeWidth = 2.dp)
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = BizcoBlue, strokeWidth = 2.dp)
                 } else {
-                    Text("Confirm", color = if (canConfirm) BizcoOrange else BizcoTextMuted, fontWeight = FontWeight.SemiBold)
+                    Text("Confirm", color = if (canConfirm) BizcoBlue else BizcoTextMuted, fontWeight = FontWeight.SemiBold)
                 }
             }
         },
@@ -295,3 +295,4 @@ private fun ChangePinDialog(
         }
     )
 }
+

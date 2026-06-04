@@ -1,4 +1,4 @@
-package com.bizcopay.app.ui.merchant
+﻿package com.bizcopay.app.ui.merchant
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -80,7 +80,7 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
                             unfocusedContainerColor  = BizcoCard,
                             focusedTextColor      = BizcoTextPrimary,
                             unfocusedTextColor    = BizcoTextPrimary,
-                            cursorColor           = BizcoOrange,
+                            cursorColor           = BizcoBlue,
                         )
                     )
                     Spacer(Modifier.height(14.dp))
@@ -98,7 +98,7 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
                             unfocusedContainerColor  = BizcoCard,
                             focusedTextColor      = BizcoTextPrimary,
                             unfocusedTextColor    = BizcoTextPrimary,
-                            cursorColor           = BizcoOrange,
+                            cursorColor           = BizcoBlue,
                         )
                     )
                     Spacer(Modifier.height(28.dp))
@@ -114,7 +114,7 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
                             .fillMaxWidth()
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = BizcoOrange)
+                        colors = ButtonDefaults.buttonColors(containerColor = BizcoBlue)
                     ) {
                         Text(
                             "Request Payment",
@@ -146,7 +146,7 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
                             Modifier.padding(28.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("📡", fontSize = 48.sp)
+                            Text("ðŸ“¡", fontSize = 48.sp)
                             Spacer(Modifier.height(16.dp))
                             Text(
                                 "RWF ${s.amount}",
@@ -161,7 +161,7 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
                                 fontSize = 14.sp
                             )
                             Spacer(Modifier.height(24.dp))
-                            CircularProgressIndicator(color = BizcoOrange)
+                            CircularProgressIndicator(color = BizcoBlue)
                             Spacer(Modifier.height(24.dp))
                             OutlinedButton(
                                 onClick = { viewModel.onNfcRead(s.transactionId, "SIMULATED-UID-001") },
@@ -169,7 +169,7 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
                             ) { Text("Simulate NFC Tap (no device)", color = BizcoTextSecondary) }
                             Spacer(Modifier.height(8.dp))
                             TextButton(onClick = { viewModel.reset() }) {
-                                Text("Cancel", color = BizcoOrange)
+                                Text("Cancel", color = BizcoBlue)
                             }
                         }
                     }
@@ -192,7 +192,7 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
                             Spacer(Modifier.height(8.dp))
                             Text(
                                 "Amount: RWF ${s.amount}",
-                                color = BizcoOrange,
+                                color = BizcoBlue,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -219,7 +219,7 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
                                     unfocusedContainerColor  = BizcoCard,
                                     focusedTextColor      = BizcoTextPrimary,
                                     unfocusedTextColor    = BizcoTextPrimary,
-                                    cursorColor           = BizcoOrange,
+                                    cursorColor           = BizcoBlue,
                                 )
                             )
                             Spacer(Modifier.height(20.dp))
@@ -249,7 +249,7 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
                             Modifier.padding(32.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("✓", fontSize = 56.sp, color = BizcoSuccess)
+                            Text("âœ“", fontSize = 56.sp, color = BizcoSuccess)
                             Spacer(Modifier.height(16.dp))
                             Text(
                                 "Payment Approved",
@@ -287,7 +287,7 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
                             Modifier.padding(32.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("✕", fontSize = 56.sp, color = BizcoError)
+                            Text("âœ•", fontSize = 56.sp, color = BizcoError)
                             Spacer(Modifier.height(16.dp))
                             Text(
                                 "Payment Failed",
@@ -322,3 +322,4 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
         }
     }
 }
+
