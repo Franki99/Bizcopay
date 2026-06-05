@@ -13,6 +13,7 @@ import com.bizcopay.app.data.network.models.TransactionResponse
 import com.bizcopay.app.data.network.models.WalletResponse
 import com.bizcopay.app.data.nfc.NfcEventBus
 import com.bizcopay.app.data.local.NfcDeviceTypeStore
+import com.bizcopay.app.data.local.TopUpStore
 import com.bizcopay.app.data.notification.NotificationHelper
 import com.bizcopay.app.data.notification.NotificationStore
 import com.bizcopay.app.data.socket.SocketManager
@@ -67,6 +68,7 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
     init {
         NotificationStore.init(getApplication())
         NfcDeviceTypeStore.init(getApplication())
+        TopUpStore.init(getApplication())
         loadWallet()
         loadTokens()
         loadTransactions()
@@ -156,7 +158,9 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
             }
             mgr.onWalletToppedUp { data ->
                 val amount = data.optString("amount", "?")
+                val balance = data.optString("balance", "")
                 loadWallet()
+                TopUpStore.add(amount, balance)
                 NotificationHelper.showWalletToppedUp(ctx, amount)
                 NotificationStore.add("Wallet Topped Up", "RWF $amount has been added to your wallet", "wallet")
             }

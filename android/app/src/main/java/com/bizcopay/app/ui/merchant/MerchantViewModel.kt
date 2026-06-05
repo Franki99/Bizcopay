@@ -10,6 +10,7 @@ import com.bizcopay.app.data.network.models.CreateTransactionRequest
 import com.bizcopay.app.data.network.models.MerchantAnalyticsResponse
 import com.bizcopay.app.data.network.models.NfcTapRequest
 import com.bizcopay.app.data.network.models.TransactionResponse
+import com.bizcopay.app.data.network.models.WalletResponse
 import com.bizcopay.app.data.notification.NotificationHelper
 import com.bizcopay.app.data.notification.NotificationStore
 import com.bizcopay.app.data.socket.SocketManager
@@ -39,6 +40,9 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
     private val _state = MutableStateFlow<MerchantState>(MerchantState.Idle)
     val state: StateFlow<MerchantState> = _state
 
+    private val _wallet = MutableStateFlow<WalletResponse?>(null)
+    val wallet: StateFlow<WalletResponse?> = _wallet
+
     private val _history = MutableStateFlow<List<TransactionResponse>>(emptyList())
     val history: StateFlow<List<TransactionResponse>> = _history
 
@@ -50,9 +54,19 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
 
     init {
         NotificationStore.init(getApplication())
+        loadWallet()
         loadHistory()
         loadAnalytics()
         connectPersistentSocket()
+    }
+
+    private fun loadWallet() {
+        viewModelScope.launch {
+            try {
+                val r = api.getWallet()
+                if (r.isSuccessful) _wallet.value = r.body()
+            } catch (_: Exception) {}
+        }
     }
 
     private fun connectPersistentSocket() {

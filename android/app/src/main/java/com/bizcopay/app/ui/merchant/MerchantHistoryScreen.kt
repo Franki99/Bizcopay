@@ -16,15 +16,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bizcopay.app.data.local.StatementHelper
+import com.bizcopay.app.ui.common.PeriodPickerSheet
+import com.bizcopay.app.ui.common.filterByPeriod
 import com.bizcopay.app.ui.theme.*
 
 @Composable
 fun MerchantHistoryScreen(viewModel: MerchantViewModel) {
     val history by viewModel.history.collectAsState()
+    val wallet  by viewModel.wallet.collectAsState()
+    var showPeriod by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val tokenManager = remember { com.bizcopay.app.data.local.TokenManager(context) }
     val ownerName  = remember { tokenManager.getName() ?: "" }
     val ownerEmail = remember { tokenManager.getEmail() ?: "" }
+    val walletId   = wallet?.id ?: ""
 
     LaunchedEffect(Unit) { viewModel.loadHistory() }
 
@@ -38,21 +43,10 @@ fun MerchantHistoryScreen(viewModel: MerchantViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        "Sales History",
-                        color = BizcoTextPrimary,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("Sales History", color = BizcoTextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                     if (history.isNotEmpty()) {
-                        IconButton(onClick = {
-                            StatementHelper.exportAndShare(context, history, "MERCHANT", ownerName, ownerEmail)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Rounded.FileDownload,
-                                contentDescription = "Download statement",
-                                tint = BizcoBlue
-                            )
+                        IconButton(onClick = { showPeriod = true }) {
+                            Icon(Icons.Rounded.FileDownload, contentDescription = "Export statement", tint = BizcoBlue)
                         }
                     }
                 }
@@ -60,12 +54,7 @@ fun MerchantHistoryScreen(viewModel: MerchantViewModel) {
 
             if (history.isEmpty()) {
                 item {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(60.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(Modifier.fillMaxWidth().padding(60.dp), contentAlignment = Alignment.Center) {
                         Text("No sales yet", color = BizcoTextMuted, fontSize = 15.sp)
                     }
                 }
@@ -79,29 +68,15 @@ fun MerchantHistoryScreen(viewModel: MerchantViewModel) {
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = BizcoCard)
                 ) {
-                    Row(
-                        Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(
-                                tx.payer?.name ?: "Customer",
-                                color = BizcoTextPrimary,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                tx.createdAt.take(16).replace("T", " "),
-                                color = BizcoTextSecondary,
-                                fontSize = 12.sp
-                            )
+                            Text(tx.payer?.name ?: "Customer", color = BizcoTextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                            Text(tx.createdAt.take(16).replace("T", " "), color = BizcoTextSecondary, fontSize = 12.sp)
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
                                 "+ RWF ${"%,.0f".format(tx.amount.toDouble())}",
-                                color = BizcoSuccess,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold
+                                color = BizcoSuccess, fontSize = 15.sp, fontWeight = FontWeight.SemiBold
                             )
                             val statusColor = if (tx.status == "APPROVED") BizcoSuccess else BizcoError
                             Text(tx.status, color = statusColor, fontSize = 11.sp)
@@ -112,5 +87,22 @@ fun MerchantHistoryScreen(viewModel: MerchantViewModel) {
 
             item { Spacer(Modifier.height(24.dp)) }
         }
+    }
+
+    if (showPeriod) {
+        PeriodPickerSheet(
+            onDismiss = { showPeriod = false },
+            onSelect = { period ->
+                showPeriod = false
+                StatementHelper.exportAndShare(
+                    context = context,
+                    transactions = history.filterByPeriod(period),
+                    role = "MERCHANT",
+                    ownerName = ownerName,
+                    ownerEmail = ownerEmail,
+                    walletId = walletId,
+                )
+            }
+        )
     }
 }
