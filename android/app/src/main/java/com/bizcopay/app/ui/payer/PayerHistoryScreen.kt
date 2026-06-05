@@ -25,8 +25,7 @@ import com.bizcopay.app.data.local.TopUpRecord
 import com.bizcopay.app.data.local.TopUpStore
 import com.bizcopay.app.data.network.models.TransactionResponse
 import com.bizcopay.app.ui.common.PeriodPickerSheet
-import com.bizcopay.app.ui.common.StatementPeriod
-import com.bizcopay.app.ui.common.filterByPeriod
+import com.bizcopay.app.ui.common.filterByRange
 import com.bizcopay.app.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -167,11 +166,16 @@ fun PayerHistoryScreen(viewModel: PayerViewModel) {
     if (showPeriod) {
         PeriodPickerSheet(
             onDismiss = { showPeriod = false },
-            onSelect = { period ->
+            onSelect = { startMs, endMs ->
                 showPeriod = false
+                val filteredTopUps = topUps.filter {
+                    (startMs == null || it.timestamp >= startMs) &&
+                    (endMs == null || it.timestamp <= endMs)
+                }
                 StatementHelper.exportAndShare(
                     context = context,
-                    transactions = transactions.filterByPeriod(period),
+                    transactions = transactions.filterByRange(startMs, endMs),
+                    topUps = filteredTopUps,
                     role = "PAYER",
                     ownerName = ownerName,
                     ownerEmail = ownerEmail,

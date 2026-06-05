@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bizcopay.app.data.local.StatementHelper
 import com.bizcopay.app.ui.common.PeriodPickerSheet
-import com.bizcopay.app.ui.common.filterByPeriod
+import com.bizcopay.app.ui.common.filterByRange
 import com.bizcopay.app.ui.theme.*
 
 @Composable
@@ -92,11 +92,11 @@ fun MerchantHistoryScreen(viewModel: MerchantViewModel) {
     if (showPeriod) {
         PeriodPickerSheet(
             onDismiss = { showPeriod = false },
-            onSelect = { period ->
+            onSelect = { startMs, endMs ->
                 showPeriod = false
                 StatementHelper.exportAndShare(
                     context = context,
-                    transactions = history.filterByPeriod(period),
+                    transactions = history.filterByRange(startMs, endMs),
                     role = "MERCHANT",
                     ownerName = ownerName,
                     ownerEmail = ownerEmail,

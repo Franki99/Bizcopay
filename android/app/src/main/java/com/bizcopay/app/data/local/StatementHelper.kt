@@ -24,12 +24,13 @@ object StatementHelper {
     fun exportAndShare(
         context: Context,
         transactions: List<TransactionResponse>,
+        topUps: List<TopUpRecord> = emptyList(),
         role: String,
         ownerName: String = "",
         ownerEmail: String = "",
         walletId: String = "",
     ) {
-        val pdf = buildPdf(transactions, role, ownerName, ownerEmail, walletId)
+        val pdf = buildPdf(transactions, topUps, role, ownerName, ownerEmail, walletId)
         val dir = File(context.getExternalFilesDir("Documents"), "").also { it.mkdirs() }
         val file = File(dir, "bizcopay_statement_${System.currentTimeMillis()}.pdf")
         FileOutputStream(file).use { pdf.writeTo(it) }
@@ -47,6 +48,7 @@ object StatementHelper {
 
     private fun buildPdf(
         transactions: List<TransactionResponse>,
+        topUps: List<TopUpRecord>,
         role: String,
         ownerName: String,
         ownerEmail: String,
@@ -107,41 +109,14 @@ object StatementHelper {
         normal.textSize = 10f
         normal.color = Color.rgb(90, 106, 133)
         canvas.drawText("${approved.size} approved  •  ${transactions.size} total", MARGIN, y + 18f, normal)
-        y += 42f
-
-        // ── Top 5 Transactions (payer only) ───────────────────────────────────
-        if (role == "PAYER") {
-            val top5 = approved.sortedByDescending { it.amount.toDouble() }.take(5)
-            if (top5.isNotEmpty()) {
-                bold.textSize = 10f
-                bold.color = Color.rgb(13, 27, 54)
-                canvas.drawText("TOP SPENDING", MARGIN, y, bold)
-                y += 14f
-
-                val topHeaderBg = Paint().apply { color = Color.rgb(238, 242, 248) }
-                canvas.drawRect(MARGIN, y - 12f, PAGE_WIDTH - MARGIN, y + 5f, topHeaderBg)
-                bold.textSize = 8f
-                bold.color = Color.rgb(13, 27, 54)
-                canvas.drawText("Merchant", MARGIN + 4f, y, bold)
-                canvas.drawText("Amount (RWF)", 310f, y, bold)
-                canvas.drawText("Date", 460f, y, bold)
-                y += 14f
-
-                small.textSize = 9f
-                val rowAlt = Paint().apply { color = Color.rgb(248, 249, 252) }
-                top5.forEachIndexed { idx, tx ->
-                    if (idx % 2 == 1) canvas.drawRect(MARGIN, y - 10f, PAGE_WIDTH - MARGIN, y + 4f, rowAlt)
-                    small.color = Color.rgb(13, 27, 54)
-                    canvas.drawText((tx.merchant?.name ?: "—").take(22), MARGIN + 4f, y, small)
-                    small.color = Color.rgb(229, 57, 53)
-                    canvas.drawText("%,.0f".format(tx.amount.toDouble()), 310f, y, small)
-                    small.color = Color.rgb(90, 106, 133)
-                    canvas.drawText(tx.createdAt.take(10), 460f, y, small)
-                    y += 16f
-                }
-                canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, divPaint)
-                y += 18f
-            }
+        if (role == "PAYER" && topUps.isNotEmpty()) {
+            val totalCredits = topUps.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
+            normal.textSize = 11f
+            normal.color = Color.rgb(29, 185, 84)
+            canvas.drawText("Total credits: + RWF ${"%,.0f".format(totalCredits)}", MARGIN, y + 36f, normal)
+            y += 56f
+        } else {
+            y += 42f
         }
 
         // ── Table header ──────────────────────────────────────────────────────
@@ -184,6 +159,47 @@ object StatementHelper {
             small.color = Color.rgb(90, 106, 133)
             canvas.drawText(cat, col[4], y, small)
             y += 18f
+        }
+
+        // ── Credits / Top-ups (payer only) ───────────────────────────────────
+        if (role == "PAYER" && topUps.isNotEmpty() && y < PAGE_HEIGHT - MARGIN - 60f) {
+            y += 16f
+            canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, divPaint)
+            y += 16f
+            bold.textSize = 10f
+            bold.color = Color.rgb(13, 27, 54)
+            canvas.drawText("CREDITS / TOP-UPS", MARGIN, y, bold)
+            y += 14f
+            val creditCol = floatArrayOf(MARGIN, 220f, 390f)
+            val creditHeaderBg = Paint().apply { color = Color.rgb(238, 242, 248) }
+            canvas.drawRect(MARGIN, y - 14f, PAGE_WIDTH - MARGIN, y + 6f, creditHeaderBg)
+            bold.textSize = 9f
+            bold.color = Color.rgb(13, 27, 54)
+            canvas.drawText("Date & Time", creditCol[0], y, bold)
+            canvas.drawText("Amount (RWF)", creditCol[1], y, bold)
+            canvas.drawText("Balance After", creditCol[2], y, bold)
+            y += 16f
+            canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, divPaint)
+            y += 10f
+            val sdf = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+            val creditRowAlt = Paint().apply { color = Color.rgb(248, 249, 252) }
+            topUps.forEachIndexed { idx, record ->
+                if (y > PAGE_HEIGHT - MARGIN) return@forEachIndexed
+                if (idx % 2 == 1) canvas.drawRect(MARGIN, y - 10f, PAGE_WIDTH - MARGIN, y + 4f, creditRowAlt)
+                small.textSize = 9f
+                small.color = Color.rgb(13, 27, 54)
+                canvas.drawText(sdf.format(Date(record.timestamp)).take(22), creditCol[0], y, small)
+                small.color = Color.rgb(29, 185, 84)
+                canvas.drawText("%,.0f".format(record.amount.toDoubleOrNull() ?: 0.0), creditCol[1], y, small)
+                small.color = Color.rgb(90, 106, 133)
+                canvas.drawText(
+                    if (record.balanceAfter.isNotBlank())
+                        "%,.0f".format(record.balanceAfter.toDoubleOrNull() ?: 0.0)
+                    else "—",
+                    creditCol[2], y, small
+                )
+                y += 18f
+            }
         }
 
         doc.finishPage(page)
