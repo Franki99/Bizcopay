@@ -24,6 +24,13 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
     var amount by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
 
+    LaunchedEffect(state) {
+        if (state is MerchantState.Idle) {
+            amount = ""
+            description = ""
+        }
+    }
+
     Scaffold(
         containerColor = BizcoBackground,
         topBar = {

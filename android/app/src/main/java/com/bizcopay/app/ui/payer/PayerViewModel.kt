@@ -110,7 +110,20 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val r = api.getMyTransactions()
-                if (r.isSuccessful) _transactions.value = r.body() ?: emptyList()
+                if (r.isSuccessful) {
+                    val txs = r.body() ?: emptyList()
+                    _transactions.value = txs
+                    if (NotificationStore.notifications.value.isEmpty() && txs.isNotEmpty()) {
+                        txs.take(20).reversed().forEach { tx ->
+                            val title = if (tx.status == "APPROVED") "Payment Successful" else "Payment Failed"
+                            val body = if (tx.status == "APPROVED")
+                                "RWF ${"%,.0f".format(tx.amount.toDouble())} at ${tx.merchant?.name ?: "merchant"}"
+                            else
+                                "Payment at ${tx.merchant?.name ?: "merchant"} was declined"
+                            NotificationStore.add(title, body, "payment")
+                        }
+                    }
+                }
             } catch (_: Exception) {}
         }
     }
@@ -154,6 +167,8 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
             mgr.onPaymentFailed { data ->
                 val reason = data.optString("reason", "Unknown reason")
                 _state.value = PayerState.Failed(reason)
+                loadWallet()
+                loadTransactions()
                 NotificationHelper.showPaymentFailed(ctx, reason)
                 NotificationStore.add("Payment Failed", reason, "payment")
             }

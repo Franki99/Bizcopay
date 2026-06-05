@@ -143,7 +143,7 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
             try {
                 val response = api.approveWithPin(transactionId, ApprovePinRequest(pin))
                 if (!response.isSuccessful) {
-                    _state.value = MerchantState.Error("Incorrect PIN")
+                    _state.value = MerchantState.Failed("Transaction declined")
                 }
             } catch (e: Exception) {
                 _state.value = MerchantState.Error("Connection failed")
@@ -155,7 +155,19 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             try {
                 val r = api.getMyTransactions()
-                if (r.isSuccessful) _history.value = r.body() ?: emptyList()
+                if (r.isSuccessful) {
+                    val txs = r.body() ?: emptyList()
+                    _history.value = txs
+                    if (NotificationStore.notifications.value.isEmpty() && txs.isNotEmpty()) {
+                        txs.filter { it.status == "APPROVED" }.take(20).reversed().forEach { tx ->
+                            NotificationStore.add(
+                                "Payment Received",
+                                "You received RWF ${"%,.0f".format(tx.amount.toDouble())} from ${tx.payer?.name ?: "customer"}",
+                                "payment"
+                            )
+                        }
+                    }
+                }
             } catch (_: Exception) {}
         }
     }
