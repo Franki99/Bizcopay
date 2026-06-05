@@ -42,7 +42,7 @@ private enum class RegStep { None, TypePick, Scanning, Captured, Registering }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PayerNfcDevicesScreen(viewModel: PayerViewModel, onBack: () -> Unit) {
+fun PayerNfcDevicesScreen(viewModel: PayerViewModel, onBack: (() -> Unit)? = null) {
     val context = LocalContext.current
     val tokens by viewModel.tokens.collectAsState()
     val registrationState by viewModel.registrationState.collectAsState()
@@ -82,11 +82,18 @@ fun PayerNfcDevicesScreen(viewModel: PayerViewModel, onBack: () -> Unit) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 4.dp, end = 24.dp, top = 12.dp, bottom = 8.dp),
+                        .padding(
+                            start = if (onBack != null) 4.dp else 24.dp,
+                            end = 24.dp,
+                            top = 12.dp,
+                            bottom = 8.dp
+                        ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Rounded.ArrowBack, contentDescription = "Back", tint = BizcoTextPrimary)
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.Rounded.ArrowBack, contentDescription = "Back", tint = BizcoTextPrimary)
+                        }
                     }
                     Text("NFC Devices", color = BizcoTextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.weight(1f))

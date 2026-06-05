@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Nfc
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PieChart
 import androidx.compose.material3.*
@@ -29,6 +30,7 @@ fun PayerMainScreen(rootNavController: NavController, viewModel: PayerViewModel 
         "Home" to Icons.Rounded.Home,
         "History" to Icons.Rounded.History,
         "Insights" to Icons.Rounded.PieChart,
+        "Devices" to Icons.Rounded.Nfc,
         "Profile" to Icons.Rounded.Person,
     )
 
@@ -89,7 +91,8 @@ fun PayerMainScreen(rootNavController: NavController, viewModel: PayerViewModel 
                 0 -> PayerHomeScreen(rootNavController, viewModel, onGoToHistory = { selectedTab = 1 })
                 1 -> PayerHistoryScreen(viewModel)
                 2 -> PayerInsightsScreen(viewModel)
-                3 -> PayerProfileScreen(rootNavController, viewModel)
+                3 -> PayerNfcDevicesScreen(viewModel)
+                4 -> PayerProfileScreen(rootNavController, viewModel)
             }
         }
     }
