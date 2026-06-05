@@ -12,6 +12,7 @@ import com.bizcopay.app.data.network.models.RegisterNfcTokenRequest
 import com.bizcopay.app.data.network.models.TransactionResponse
 import com.bizcopay.app.data.network.models.WalletResponse
 import com.bizcopay.app.data.nfc.NfcEventBus
+import com.bizcopay.app.data.local.NfcDeviceTypeStore
 import com.bizcopay.app.data.notification.NotificationHelper
 import com.bizcopay.app.data.notification.NotificationStore
 import com.bizcopay.app.data.socket.SocketManager
@@ -65,6 +66,7 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         NotificationStore.init(getApplication())
+        NfcDeviceTypeStore.init(getApplication())
         loadWallet()
         loadTokens()
         loadTransactions()

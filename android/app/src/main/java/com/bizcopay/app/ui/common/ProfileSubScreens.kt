@@ -204,7 +204,7 @@ private fun PrefToggleRow(
 @Composable
 fun ProfileAccountSecurityScreen(
     onBack: () -> Unit,
-    deviceSection: @Composable () -> Unit = {},
+    onDevices: (() -> Unit)? = null,
 ) {
     val authViewModel: AuthViewModel = viewModel()
     val changePinState by authViewModel.changePinState.collectAsState()
@@ -239,38 +239,61 @@ fun ProfileAccountSecurityScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = BizcoCard)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            authViewModel.resetChangePinState()
-                            showChangePinDialog = true
-                        }
-                        .padding(horizontal = 20.dp, vertical = 15.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
+                Column {
+                    Row(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(BizcoBlue.copy(alpha = 0.12f)),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .clickable {
+                                authViewModel.resetChangePinState()
+                                showChangePinDialog = true
+                            }
+                            .padding(horizontal = 20.dp, vertical = 15.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Rounded.Lock, contentDescription = null, tint = BizcoBlue, modifier = Modifier.size(22.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(BizcoBlue.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Rounded.Lock, contentDescription = null, tint = BizcoBlue, modifier = Modifier.size(22.dp))
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Change PIN", color = BizcoTextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                            Text("Update your 4-digit security PIN", color = BizcoTextSecondary, fontSize = 12.sp)
+                        }
+                        Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = BizcoTextMuted, modifier = Modifier.size(20.dp))
                     }
-                    Spacer(Modifier.width(16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Change PIN", color = BizcoTextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                        Text("Update your 4-digit security PIN", color = BizcoTextSecondary, fontSize = 12.sp)
+                    if (onDevices != null) {
+                        Divider(color = BizcoBorder, thickness = 0.5.dp, modifier = Modifier.padding(start = 72.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(onClick = onDevices)
+                                .padding(horizontal = 20.dp, vertical = 15.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(BizcoGreen.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Rounded.Nfc, contentDescription = null, tint = BizcoGreen, modifier = Modifier.size(22.dp))
+                            }
+                            Spacer(Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("My NFC Devices", color = BizcoTextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                                Text("Manage your registered cards, rings and bracelets", color = BizcoTextSecondary, fontSize = 12.sp)
+                            }
+                            Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = BizcoTextMuted, modifier = Modifier.size(20.dp))
+                        }
                     }
-                    Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = BizcoTextMuted, modifier = Modifier.size(20.dp))
                 }
             }
-        }
-
-        item {
-            Spacer(Modifier.height(20.dp))
-            deviceSection()
         }
 
         item { Spacer(Modifier.height(24.dp)) }

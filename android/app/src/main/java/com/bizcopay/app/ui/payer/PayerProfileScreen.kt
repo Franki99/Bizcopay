@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,7 +29,7 @@ import com.bizcopay.app.ui.common.*
 import com.bizcopay.app.ui.navigation.Screen
 import com.bizcopay.app.ui.theme.*
 
-private enum class PayerProfileDest { Main, Preferences, AccountSecurity, GetInTouch, FAQs }
+private enum class PayerProfileDest { Main, Preferences, AccountSecurity, NfcDevices, GetInTouch, FAQs }
 
 @Composable
 fun PayerProfileScreen(rootNavController: NavController, viewModel: PayerViewModel) {
@@ -51,7 +50,12 @@ fun PayerProfileScreen(rootNavController: NavController, viewModel: PayerViewMod
         PayerProfileDest.AccountSecurity ->
             ProfileAccountSecurityScreen(
                 onBack = { dest = PayerProfileDest.Main },
-                deviceSection = { PayerDevicesSection(viewModel) }
+                onDevices = { dest = PayerProfileDest.NfcDevices }
+            )
+        PayerProfileDest.NfcDevices ->
+            PayerNfcDevicesScreen(
+                viewModel = viewModel,
+                onBack = { dest = PayerProfileDest.AccountSecurity }
             )
         PayerProfileDest.GetInTouch ->
             ProfileGetInTouchScreen(onBack = { dest = PayerProfileDest.Main })
@@ -213,63 +217,3 @@ private fun PayerProfileMain(
     }
 }
 
-@Composable
-private fun PayerDevicesSection(viewModel: PayerViewModel) {
-    val tokens by viewModel.tokens.collectAsState()
-    val registrationState by viewModel.registrationState.collectAsState()
-
-    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-        Text(
-            "My NFC Devices",
-            color = BizcoTextSecondary,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        if (tokens.isNotEmpty()) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = BizcoCard)
-            ) {
-                Column {
-                    tokens.forEachIndexed { idx, token ->
-                        if (idx > 0) Divider(color = BizcoBorder, thickness = 0.5.dp, modifier = Modifier.padding(start = 68.dp))
-                        Row(
-                            Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(BizcoBlue.copy(alpha = 0.10f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Rounded.Nfc, contentDescription = null, tint = BizcoBlue, modifier = Modifier.size(22.dp))
-                            }
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(token.label ?: token.uid, color = BizcoTextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Text("UID: ${token.uid}", color = BizcoTextSecondary, fontSize = 12.sp)
-                            }
-                            IconButton(onClick = { viewModel.deactivateToken(token.id) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Remove", tint = BizcoError)
-                            }
-                        }
-                    }
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-        }
-        NfcRegistrationSection(
-            registrationState = registrationState,
-            tokens = emptyList(),
-            onStart = { viewModel.startNfcRegistration() },
-            onCancel = { viewModel.cancelNfcRegistration() },
-            onRegister = { uid, label -> viewModel.registerToken(uid, label) },
-            onDone = { viewModel.resetRegistration() },
-            onDelete = { }
-        )
-    }
-}
