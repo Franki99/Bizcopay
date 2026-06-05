@@ -66,9 +66,10 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
     val analyticsLoaded: StateFlow<Boolean> = _analyticsLoaded
 
     init {
-        NotificationStore.init(getApplication())
+        val userId = tokenManager.getUserId() ?: ""
+        NotificationStore.init(getApplication(), userId)
         NfcDeviceTypeStore.init(getApplication())
-        TopUpStore.init(getApplication())
+        TopUpStore.init(getApplication(), userId)
         loadWallet()
         loadTokens()
         loadTransactions()

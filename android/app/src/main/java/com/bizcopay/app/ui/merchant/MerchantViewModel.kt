@@ -53,7 +53,7 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
     val analyticsLoaded: StateFlow<Boolean> = _analyticsLoaded
 
     init {
-        NotificationStore.init(getApplication())
+        NotificationStore.init(getApplication(), tokenManager.getUserId() ?: "")
         loadWallet()
         loadHistory()
         loadAnalytics()

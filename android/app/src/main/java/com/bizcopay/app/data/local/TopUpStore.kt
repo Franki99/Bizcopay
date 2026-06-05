@@ -18,13 +18,15 @@ data class TopUpRecord(
 
 object TopUpStore {
     private lateinit var prefs: SharedPreferences
+    private var currentUserId = ""
 
     private val _topUps = MutableStateFlow<List<TopUpRecord>>(emptyList())
     val topUps: StateFlow<List<TopUpRecord>> = _topUps.asStateFlow()
 
-    fun init(context: Context) {
-        if (!::prefs.isInitialized) {
-            prefs = context.getSharedPreferences("bizco_topup_store", Context.MODE_PRIVATE)
+    fun init(context: Context, userId: String) {
+        if (!::prefs.isInitialized || currentUserId != userId) {
+            currentUserId = userId
+            prefs = context.getSharedPreferences("bizco_topup_$userId", Context.MODE_PRIVATE)
             _topUps.value = loadFromPrefs()
         }
     }

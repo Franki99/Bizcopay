@@ -11,15 +11,17 @@ import java.util.UUID
 object NotificationStore {
 
     private lateinit var prefs: SharedPreferences
+    private var currentUserId = ""
 
     private val _notifications = MutableStateFlow<List<NotificationItem>>(emptyList())
     val notifications: StateFlow<List<NotificationItem>> = _notifications.asStateFlow()
 
     val unreadCount: Int get() = _notifications.value.count { !it.isRead }
 
-    fun init(context: Context) {
-        if (!::prefs.isInitialized) {
-            prefs = context.getSharedPreferences("bizco_notif_store", Context.MODE_PRIVATE)
+    fun init(context: Context, userId: String) {
+        if (!::prefs.isInitialized || currentUserId != userId) {
+            currentUserId = userId
+            prefs = context.getSharedPreferences("bizco_notif_$userId", Context.MODE_PRIVATE)
             _notifications.value = loadFromPrefs()
         }
     }
