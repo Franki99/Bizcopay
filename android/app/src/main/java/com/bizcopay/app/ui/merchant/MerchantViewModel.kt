@@ -14,6 +14,7 @@ import com.bizcopay.app.data.network.models.WalletResponse
 import com.bizcopay.app.data.notification.NotificationHelper
 import com.bizcopay.app.data.notification.NotificationStore
 import com.bizcopay.app.data.socket.SocketManager
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -52,6 +53,8 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
 
     private val _analyticsLoaded = MutableStateFlow(false)
     val analyticsLoaded: StateFlow<Boolean> = _analyticsLoaded
+
+    private var analyticsJob: Job? = null
 
     init {
         NotificationStore.init(getApplication(), tokenManager.getUserId() ?: "")
@@ -175,7 +178,8 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun loadAnalytics(period: String = "year") {
-        viewModelScope.launch {
+        analyticsJob?.cancel()
+        analyticsJob = viewModelScope.launch {
             _analyticsLoaded.value = false
             try {
                 val r = api.getMerchantAnalytics(period)

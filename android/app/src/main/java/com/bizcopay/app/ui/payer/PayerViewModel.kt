@@ -66,6 +66,8 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
     private val _analyticsLoaded = MutableStateFlow(false)
     val analyticsLoaded: StateFlow<Boolean> = _analyticsLoaded
 
+    private var analyticsJob: Job? = null
+
     init {
         val userId = tokenManager.getUserId() ?: ""
         NotificationStore.init(getApplication(), userId)
@@ -128,7 +130,9 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loadAnalytics(period: String = "year") {
-        viewModelScope.launch {
+        analyticsJob?.cancel()
+        analyticsJob = viewModelScope.launch {
+            _analyticsLoaded.value = false
             try {
                 val r = api.getPayerAnalytics(period)
                 if (r.isSuccessful) _analytics.value = r.body()

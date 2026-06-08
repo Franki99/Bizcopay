@@ -30,7 +30,7 @@ fun PayerInsightsScreen(viewModel: PayerViewModel) {
     val analyticsLoaded by viewModel.analyticsLoaded.collectAsState()
     var selectedPeriod by remember { mutableStateOf("year") }
 
-    LaunchedEffect(Unit) { viewModel.loadAnalytics(selectedPeriod) }
+    LaunchedEffect(selectedPeriod) { viewModel.loadAnalytics(selectedPeriod) }
 
     Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
         LazyColumn(
@@ -58,10 +58,7 @@ fun PayerInsightsScreen(viewModel: PayerViewModel) {
                     listOf("week" to "Week", "month" to "Month", "year" to "Year").forEach { (period, label) ->
                         FilterChip(
                             selected = selectedPeriod == period,
-                            onClick = {
-                                selectedPeriod = period
-                                viewModel.loadAnalytics(period)
-                            },
+                            onClick = { selectedPeriod = period },
                             label = { Text(label, fontSize = 13.sp) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = BizcoBlue,
