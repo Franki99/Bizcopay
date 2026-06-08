@@ -43,6 +43,7 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
     private val api = ApiClient.create(tokenManager)
     private var socketManager: SocketManager? = null
     private var nfcReadJob: Job? = null
+    private val sessionStartMs = System.currentTimeMillis()
 
     private val _state = MutableStateFlow<PayerState>(PayerState.Idle)
     val state: StateFlow<PayerState> = _state
@@ -113,15 +114,13 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
                 if (r.isSuccessful) {
                     val txs = r.body() ?: emptyList()
                     _transactions.value = txs
-                    if (NotificationStore.notifications.value.isEmpty() && txs.isNotEmpty()) {
-                        txs.take(20).reversed().forEach { tx ->
-                            val title = if (tx.status == "APPROVED") "Payment Successful" else "Payment Failed"
-                            val body = if (tx.status == "APPROVED")
-                                "RWF ${"%,.0f".format(tx.amount.toDouble())} at ${tx.merchant?.name ?: "merchant"}"
-                            else
-                                "Payment at ${tx.merchant?.name ?: "merchant"} was declined"
-                            NotificationStore.add(title, body, "payment")
-                        }
+                    txs.take(30).forEach { tx ->
+                        val title = if (tx.status == "APPROVED") "Payment Successful" else "Payment Failed"
+                        val body = if (tx.status == "APPROVED")
+                            "RWF ${"%,.0f".format(tx.amount.toDouble())} at ${tx.merchant?.name ?: "merchant"}"
+                        else
+                            "Payment at ${tx.merchant?.name ?: "merchant"} was declined"
+                        NotificationStore.addIfAbsent(tx.id, title, body, "payment", tx.createdAt, sessionStartMs)
                     }
                 }
             } catch (_: Exception) {}

@@ -31,6 +31,7 @@ sealed class MerchantState {
 class MerchantViewModel(application: Application) : AndroidViewModel(application) {
     private val tokenManager = TokenManager(application)
     private val api = ApiClient.create(tokenManager)
+    private val sessionStartMs = System.currentTimeMillis()
 
     // Persistent socket for merchant user-room notifications (payment:received)
     private var persistentSocket: SocketManager? = null
@@ -158,14 +159,15 @@ class MerchantViewModel(application: Application) : AndroidViewModel(application
                 if (r.isSuccessful) {
                     val txs = r.body() ?: emptyList()
                     _history.value = txs
-                    if (NotificationStore.notifications.value.isEmpty() && txs.isNotEmpty()) {
-                        txs.filter { it.status == "APPROVED" }.take(20).reversed().forEach { tx ->
-                            NotificationStore.add(
-                                "Payment Received",
-                                "You received RWF ${"%,.0f".format(tx.amount.toDouble())} from ${tx.payer?.name ?: "customer"}",
-                                "payment"
-                            )
-                        }
+                    txs.filter { it.status == "APPROVED" }.take(30).forEach { tx ->
+                        NotificationStore.addIfAbsent(
+                            tx.id,
+                            "Payment Received",
+                            "You received RWF ${"%,.0f".format(tx.amount.toDouble())} from ${tx.payer?.name ?: "customer"}",
+                            "payment",
+                            tx.createdAt,
+                            sessionStartMs,
+                        )
                     }
                 }
             } catch (_: Exception) {}

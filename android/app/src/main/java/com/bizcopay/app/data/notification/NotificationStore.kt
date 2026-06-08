@@ -46,6 +46,32 @@ object NotificationStore {
         if (::prefs.isInitialized) saveToPrefs(updated)
     }
 
+    fun addIfAbsent(
+        id: String,
+        title: String,
+        body: String,
+        type: String,
+        createdAt: String,
+        onlyBefore: Long? = null,
+    ) {
+        val timestampMs = parseIso(createdAt) ?: System.currentTimeMillis()
+        if (onlyBefore != null && timestampMs >= onlyBefore) return
+        if (_notifications.value.any { it.id == id }) return
+        val item = NotificationItem(
+            id        = id,
+            title     = title,
+            body      = body,
+            timestamp = timestampMs,
+            isRead    = false,
+            type      = type,
+        )
+        val updated = (_notifications.value + item)
+            .sortedByDescending { it.timestamp }
+            .take(50)
+        _notifications.value = updated
+        if (::prefs.isInitialized) saveToPrefs(updated)
+    }
+
     fun clearAll() {
         _notifications.value = emptyList()
         if (::prefs.isInitialized) saveToPrefs(emptyList())
@@ -64,4 +90,10 @@ object NotificationStore {
             (0 until arr.length()).map { arr.getJSONObject(it).toNotificationItem() }
         } catch (_: Exception) { emptyList() }
     }
+
+    private fun parseIso(s: String): Long? = try {
+        java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
+            .also { it.timeZone = java.util.TimeZone.getTimeZone("UTC") }
+            .parse(s.take(19))?.time
+    } catch (_: Exception) { null }
 }
