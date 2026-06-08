@@ -1,4 +1,4 @@
-﻿package com.bizcopay.app.ui.merchant
+package com.bizcopay.app.ui.merchant
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,7 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.bizcopay.app.ui.payer.BizcoBarChart
+import com.bizcopay.app.ui.payer.SmoothAreaChart
 import com.bizcopay.app.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,7 +74,7 @@ fun MerchantAnalyticsScreen(viewModel: MerchantViewModel) {
                 item {
                     Box(Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("ðŸ“Š", fontSize = 48.sp)
+                            Text("📊", fontSize = 48.sp)
                             Spacer(Modifier.height(16.dp))
                             Text("No insights yet", color = BizcoTextPrimary, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(8.dp))
@@ -117,79 +117,37 @@ fun MerchantAnalyticsScreen(viewModel: MerchantViewModel) {
                     Spacer(Modifier.height(20.dp))
                 }
 
-                // Monthly bar chart
-                if (data.byMonth.isNotEmpty()) {
-                    item {
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = BizcoCard),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(Modifier.padding(20.dp)) {
-                                Text(
-                                    "Revenue by Month",
-                                    color = BizcoTextPrimary,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(Modifier.height(16.dp))
-                                val barData = data.byMonth.map { it.month.takeLast(5) to it.amount.toFloat() }
-                                BizcoBarChart(
-                                    data = barData,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(180.dp)
-                                )
+                // Area chart
+                item {
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = BizcoCard),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(20.dp)) {
+                            val chartTitle = when (selectedPeriod) {
+                                "week" -> "Revenue This Week"
+                                "month" -> "Revenue This Month"
+                                else -> "Revenue This Year"
                             }
+                            Text(
+                                chartTitle,
+                                color = BizcoTextPrimary,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            val chartData = data.chartPoints.map { it.label to it.amount.toFloat() }
+                            SmoothAreaChart(
+                                data = chartData,
+                                lineColor = BizcoGreen,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp)
+                            )
                         }
-                        Spacer(Modifier.height(20.dp))
                     }
-
-                    item {
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = BizcoCard),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(Modifier.padding(20.dp)) {
-                                Text(
-                                    "Monthly Breakdown",
-                                    color = BizcoTextPrimary,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(Modifier.height(12.dp))
-                                data.byMonth.reversed().forEach { m ->
-                                    Row(
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 6.dp)
-                                    ) {
-                                        Text(
-                                            m.month,
-                                            color = BizcoTextSecondary,
-                                            fontSize = 14.sp,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        Text(
-                                            "${m.count} sales",
-                                            color = BizcoTextMuted,
-                                            fontSize = 13.sp,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        Text(
-                                            "RWF ${"%,.0f".format(m.amount)}",
-                                            color = BizcoTextPrimary,
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
-                                    Divider(color = BizcoBorder, thickness = 0.5.dp)
-                                }
-                            }
-                        }
-                        Spacer(Modifier.height(24.dp))
-                    }
+                    Spacer(Modifier.height(24.dp))
                 }
             }
         }
@@ -210,4 +168,3 @@ fun StatCard(label: String, value: String, modifier: Modifier = Modifier) {
         }
     }
 }
-

@@ -1,4 +1,4 @@
-﻿package com.bizcopay.app.ui.payer
+package com.bizcopay.app.ui.payer
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -14,8 +14,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -81,7 +84,7 @@ fun PayerInsightsScreen(viewModel: PayerViewModel) {
                 item {
                     Box(Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("ðŸ“Š", fontSize = 48.sp)
+                            Text("📊", fontSize = 48.sp)
                             Spacer(Modifier.height(16.dp))
                             Text("No insights yet", color = BizcoTextPrimary, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(8.dp))
@@ -118,6 +121,39 @@ fun PayerInsightsScreen(viewModel: PayerViewModel) {
                                 "This month: RWF ${"%,.0f".format(data.thisMonth)}",
                                 color = BizcoGreen,
                                 fontSize = 13.sp
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(20.dp))
+                }
+
+                // Area chart
+                item {
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = BizcoCard),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(20.dp)) {
+                            val chartTitle = when (selectedPeriod) {
+                                "week" -> "Spending This Week"
+                                "month" -> "Spending This Month"
+                                else -> "Spending This Year"
+                            }
+                            Text(
+                                chartTitle,
+                                color = BizcoTextPrimary,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            val chartData = data.chartPoints.map { it.label to it.amount.toFloat() }
+                            SmoothAreaChart(
+                                data = chartData,
+                                lineColor = BizcoGreen,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp)
                             )
                         }
                     }
@@ -190,36 +226,104 @@ fun PayerInsightsScreen(viewModel: PayerViewModel) {
                                 }
                             }
                         }
-                        Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(24.dp))
                     }
                 }
+            }
+        }
+    }
+}
 
-                // Monthly bar chart
-                if (data.byMonth.isNotEmpty()) {
-                    item {
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = BizcoCard),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(Modifier.padding(20.dp)) {
-                                Text(
-                                    "Monthly Spending",
-                                    color = BizcoTextPrimary,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(Modifier.height(16.dp))
-                                val barData = data.byMonth.map { it.month.takeLast(5) to it.amount.toFloat() }
-                                BizcoBarChart(
-                                    data = barData,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(160.dp)
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(24.dp))
+@Composable
+fun SmoothAreaChart(
+    data: List<Pair<String, Float>>,
+    lineColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val allZero = data.all { it.second == 0f }
+
+    if (allZero) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("No data", color = BizcoTextSecondary, fontSize = 13.sp)
+        }
+        return
+    }
+
+    val n = data.size
+    val step = when {
+        n <= 7  -> 1
+        n <= 14 -> 2
+        else    -> n / 5
+    }
+
+    Column(modifier = modifier) {
+        Canvas(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            val w = size.width
+            val h = size.height
+            val topPad = 12f
+
+            val maxVal = data.maxOf { it.second }.takeIf { it > 0f } ?: 1f
+
+            // Grid lines
+            listOf(1f / 3f, 2f / 3f, 1f).forEach { frac ->
+                val y = topPad + (h - topPad) * frac
+                drawLine(
+                    color = Color.White.copy(alpha = 0.07f),
+                    start = Offset(0f, y),
+                    end = Offset(w, y),
+                    strokeWidth = 1f
+                )
+            }
+
+            // Compute point positions
+            val pts = data.mapIndexed { i, (_, v) ->
+                val x = if (n == 1) w / 2f else i * (w / (n - 1).toFloat())
+                val y = topPad + (1f - v / maxVal) * (h - topPad)
+                Offset(x, y)
+            }
+
+            // Bezier line path
+            val linePath = Path().apply {
+                moveTo(pts[0].x, pts[0].y)
+                for (i in 1 until pts.size) {
+                    val cx = (pts[i - 1].x + pts[i].x) / 2f
+                    cubicTo(cx, pts[i - 1].y, cx, pts[i].y, pts[i].x, pts[i].y)
+                }
+            }
+
+            // Gradient fill path (close area to bottom)
+            val fillPath = Path().apply {
+                addPath(linePath)
+                lineTo(pts.last().x, h)
+                lineTo(pts.first().x, h)
+                close()
+            }
+
+            val gradient = Brush.verticalGradient(
+                colors = listOf(lineColor.copy(alpha = 0.40f), Color.Transparent),
+                startY = topPad,
+                endY = h
+            )
+            drawPath(fillPath, brush = gradient)
+            drawPath(
+                linePath,
+                color = lineColor,
+                style = Stroke(width = 2.5f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            )
+
+            // Peak dot
+            val peakIdx = data.indexOfFirst { it.second == data.maxOf { p -> p.second } }
+            val peakPt = pts[peakIdx]
+            drawCircle(lineColor, radius = 5f, center = peakPt)
+            drawCircle(Color.White, radius = 2.5f, center = peakPt)
+        }
+
+        // X-axis labels
+        Row(modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
+            data.forEachIndexed { i, (label, _) ->
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    if (i % step == 0 || i == data.lastIndex) {
+                        Text(label, color = BizcoTextSecondary, fontSize = 9.sp, textAlign = TextAlign.Center)
                     }
                 }
             }
@@ -301,4 +405,3 @@ fun BizcoBarChart(data: List<Pair<String, Float>>, modifier: Modifier = Modifier
         }
     }
 }
-
