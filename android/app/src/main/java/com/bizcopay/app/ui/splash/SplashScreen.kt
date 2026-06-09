@@ -1,4 +1,4 @@
-﻿package com.bizcopay.app.ui.splash
+package com.bizcopay.app.ui.splash
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -9,8 +9,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -81,10 +85,15 @@ private fun SplashPage1(onNext: () -> Unit) {
             modifier = Modifier
                 .size(120.dp)
                 .clip(CircleShape)
-                .background(BizcoBlue.copy(alpha = 0.15f)),
+                .background(Color.White.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
         ) {
-            Text("ðŸ“¡", fontSize = 48.sp)
+            Icon(
+                imageVector = Icons.Rounded.Nfc,
+                contentDescription = null,
+                tint = BizcoOnDark,
+                modifier = Modifier.size(64.dp)
+            )
         }
         Spacer(Modifier.height(48.dp))
         Text(
@@ -127,10 +136,15 @@ private fun SplashPage2(onGetStarted: () -> Unit) {
             modifier = Modifier
                 .size(120.dp)
                 .clip(CircleShape)
-                .background(BizcoBlue.copy(alpha = 0.3f)),
+                .background(Color.White.copy(alpha = 0.20f)),
             contentAlignment = Alignment.Center
         ) {
-            Text("ðŸ’³", fontSize = 48.sp)
+            Icon(
+                imageVector = Icons.Rounded.CreditCard,
+                contentDescription = null,
+                tint = BizcoOnDark,
+                modifier = Modifier.size(64.dp)
+            )
         }
         Spacer(Modifier.height(48.dp))
         Text(
@@ -140,11 +154,11 @@ private fun SplashPage2(onGetStarted: () -> Unit) {
             fontWeight = FontWeight.Bold
         )
         Spacer(Modifier.height(12.dp))
-        FeatureRow("ðŸ”’", "AI-powered fraud detection")
+        FeatureRow(Icons.Rounded.Security, "AI-powered fraud detection")
         Spacer(Modifier.height(12.dp))
-        FeatureRow("ðŸ“Š", "Real-time spending insights")
+        FeatureRow(Icons.Rounded.ShowChart, "Real-time spending insights")
         Spacer(Modifier.height(12.dp))
-        FeatureRow("ðŸ“±", "Tap & pay with NFC ring or card")
+        FeatureRow(Icons.Rounded.Nfc, "Tap & pay with NFC ring or card")
         Spacer(Modifier.height(64.dp))
         Button(
             onClick = onGetStarted,
@@ -158,7 +172,7 @@ private fun SplashPage2(onGetStarted: () -> Unit) {
 }
 
 @Composable
-private fun FeatureRow(emoji: String, text: String) {
+private fun FeatureRow(icon: ImageVector, text: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -167,9 +181,13 @@ private fun FeatureRow(emoji: String, text: String) {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(emoji, fontSize = 24.sp)
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = BizcoOnDark,
+            modifier = Modifier.size(24.dp)
+        )
         Spacer(Modifier.width(16.dp))
         Text(text, color = BizcoOnDark, fontSize = 15.sp)
     }
 }
-

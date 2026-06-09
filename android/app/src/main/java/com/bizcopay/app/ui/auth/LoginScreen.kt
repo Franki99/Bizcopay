@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Nfc
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -56,7 +58,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
                         shape = RoundedCornerShape(20.dp)
                     ),
                 contentAlignment = Alignment.Center
-            ) { Text("ðŸ“¡", fontSize = 32.sp) }
+            ) { Icon(Icons.Rounded.Nfc, contentDescription = null, tint = Color.White, modifier = Modifier.size(38.dp)) }
             Spacer(Modifier.height(24.dp))
             Text("Welcome Back!", color = BizcoTextPrimary, fontSize = 28.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))

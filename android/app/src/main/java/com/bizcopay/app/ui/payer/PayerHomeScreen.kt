@@ -168,18 +168,11 @@ fun PayerHomeScreen(
                             )
                         ) {
                             Column(modifier = Modifier.padding(20.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        "Active Balance",
-                                        color = BizcoOnDark.copy(alpha = 0.65f),
-                                        fontSize = 13.sp
-                                    )
-                                    Text("ðŸ‘", fontSize = 16.sp)
-                                }
+                                Text(
+                                    "Active Balance",
+                                    color = BizcoOnDark.copy(alpha = 0.65f),
+                                    fontSize = 13.sp
+                                )
                                 Spacer(Modifier.height(6.dp))
                                 wallet?.let {
                                     Text(
@@ -189,7 +182,7 @@ fun PayerHomeScreen(
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = (-1).sp
                                     )
-                                } ?: Text("â€”", color = BizcoOnDark, fontSize = 38.sp, fontWeight = FontWeight.Bold)
+                                } ?: Text("--", color = BizcoOnDark, fontSize = 38.sp, fontWeight = FontWeight.Bold)
                             }
                         }
 

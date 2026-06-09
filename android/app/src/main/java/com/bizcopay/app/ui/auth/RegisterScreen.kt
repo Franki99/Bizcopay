@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Nfc
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -60,7 +62,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                         shape = RoundedCornerShape(18.dp)
                     ),
                 contentAlignment = Alignment.Center
-            ) { Text("ðŸ“¡", fontSize = 28.sp) }
+            ) { Icon(Icons.Rounded.Nfc, contentDescription = null, tint = Color.White, modifier = Modifier.size(34.dp)) }
             Spacer(Modifier.height(20.dp))
             Text(
                 if (!otpSent) "Create Account" else "Verify Email",

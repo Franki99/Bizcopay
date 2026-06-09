@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Nfc
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -153,7 +155,7 @@ fun MerchantTerminalScreen(navController: NavController, viewModel: MerchantView
                             Modifier.padding(28.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("ðŸ“¡", fontSize = 48.sp)
+                            Icon(Icons.Rounded.Nfc, contentDescription = null, tint = BizcoTextSecondary, modifier = Modifier.size(56.dp))
                             Spacer(Modifier.height(16.dp))
                             Text(
                                 "RWF ${s.amount}",
