@@ -494,7 +494,7 @@ fun ProfileChangeEmailDialog(
                     )
                 } else {
                     Text(
-                        "We sent a 6-digit code to $newEmail",
+                        "We sent a 6-digit code to your current email address. Enter it to confirm the change.",
                         color = BizcoTextSecondary,
                         fontSize = 13.sp
                     )

@@ -100,15 +100,20 @@ export const changePin = async (userId: string, currentPin: string, newPin: stri
 }
 
 export async function sendChangeEmailOtp(userId: string, newEmail: string): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) throw new AppError(404, 'User not found')
   const taken = await prisma.user.findUnique({ where: { email: newEmail } })
   if (taken) throw new AppError(409, 'This email is already in use')
-  await sendOtp(newEmail, OtpPurpose.CHANGE_EMAIL)
+  // OTP goes to the current email — verifies the account owner, not just inbox access
+  await sendOtp(user.email, OtpPurpose.CHANGE_EMAIL)
 }
 
 export async function changeEmail(userId: string, newEmail: string, otpCode: string): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) throw new AppError(404, 'User not found')
   const taken = await prisma.user.findUnique({ where: { email: newEmail } })
   if (taken) throw new AppError(409, 'This email is already in use')
-  await verifyOtp(newEmail, otpCode, OtpPurpose.CHANGE_EMAIL)
+  await verifyOtp(user.email, otpCode, OtpPurpose.CHANGE_EMAIL)
   await prisma.user.update({ where: { id: userId }, data: { email: newEmail } })
 }
 
