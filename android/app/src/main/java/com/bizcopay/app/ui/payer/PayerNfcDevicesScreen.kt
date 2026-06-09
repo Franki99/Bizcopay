@@ -52,6 +52,7 @@ fun PayerNfcDevicesScreen(viewModel: PayerViewModel, onBack: (() -> Unit)? = nul
     var capturedUid by remember { mutableStateOf("") }
     var selectedDevice by remember { mutableStateOf<NfcTokenResponse?>(null) }
     var refreshKey by remember { mutableStateOf(0) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) { NfcDeviceTypeStore.init(context) }
 
@@ -68,7 +69,11 @@ fun PayerNfcDevicesScreen(viewModel: PayerViewModel, onBack: (() -> Unit)? = nul
                 regStep = RegStep.None
                 viewModel.resetRegistration()
             }
-            is NfcRegistrationState.Error -> regStep = RegStep.None
+            is NfcRegistrationState.Error -> {
+                errorMessage = rs.message
+                regStep = RegStep.None
+                viewModel.resetRegistration()
+            }
             else -> {}
         }
     }
@@ -133,6 +138,34 @@ fun PayerNfcDevicesScreen(viewModel: PayerViewModel, onBack: (() -> Unit)? = nul
         ) {
             Icon(Icons.Rounded.Add, contentDescription = "Register device", modifier = Modifier.size(28.dp))
         }
+    }
+
+    // Error dialog
+    errorMessage?.let { msg ->
+        AlertDialog(
+            onDismissRequest = { errorMessage = null },
+            containerColor = BizcoCard,
+            title = {
+                Text("Registration Failed", color = BizcoTextPrimary, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text(msg, color = BizcoTextSecondary, fontSize = 14.sp)
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        errorMessage = null
+                        regStep = RegStep.TypePick
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = BizcoBlue)
+                ) { Text("Try Again") }
+            },
+            dismissButton = {
+                TextButton(onClick = { errorMessage = null }) {
+                    Text("Dismiss", color = BizcoTextSecondary)
+                }
+            }
+        )
     }
 
     // Registration flow sheets

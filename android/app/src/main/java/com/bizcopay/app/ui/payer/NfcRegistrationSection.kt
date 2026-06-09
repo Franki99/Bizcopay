@@ -137,35 +137,13 @@ fun NfcRegistrationSection(
         }
 
         is NfcRegistrationState.Error -> {
-            Card(
+            Text(rs.message, color = BizcoError, style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.height(8.dp))
+            Button(
+                onClick = onStart,
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = BizcoError.copy(alpha = 0.12f))
-            ) {
-                Column(
-                    Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("Registration Failed", color = BizcoError, style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        rs.message,
-                        color = BizcoTextSecondary,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(
-                            onClick = onCancel,
-                            modifier = Modifier.weight(1f)
-                        ) { Text("Cancel", color = BizcoTextSecondary) }
-                        Button(
-                            onClick = onStart,
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = BizcoBlue)
-                        ) { Text("Try Again") }
-                    }
-                }
-            }
+                colors = ButtonDefaults.buttonColors(containerColor = BizcoBlue)
+            ) { Text("Try Again") }
         }
     }
 }
