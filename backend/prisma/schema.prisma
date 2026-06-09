@@ -122,4 +122,5 @@ model OtpCode {
 enum OtpPurpose {
   REGISTER
   RESET_PIN
+  CHANGE_EMAIL
 }

@@ -9,9 +9,13 @@ const transporter = DEV_MODE
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     })
 
-export async function sendOtpEmail(to: string, code: string, purpose: 'REGISTER' | 'RESET_PIN') {
-  const action = purpose === 'REGISTER' ? 'complete your registration' : 'reset your PIN'
-  const subject = purpose === 'REGISTER' ? 'Verify your Bizcopay account' : 'Reset your Bizcopay PIN'
+export async function sendOtpEmail(to: string, code: string, purpose: 'REGISTER' | 'RESET_PIN' | 'CHANGE_EMAIL') {
+  const action = purpose === 'REGISTER' ? 'complete your registration'
+    : purpose === 'RESET_PIN' ? 'reset your PIN'
+    : 'confirm your new email address'
+  const subject = purpose === 'REGISTER' ? 'Verify your Bizcopay account'
+    : purpose === 'RESET_PIN' ? 'Reset your Bizcopay PIN'
+    : 'Confirm your new Bizcopay email'
 
   if (DEV_MODE) {
     console.log(`\n📧  OTP for ${to} [${purpose}]: ${code}  (expires in 10 min)\n`)

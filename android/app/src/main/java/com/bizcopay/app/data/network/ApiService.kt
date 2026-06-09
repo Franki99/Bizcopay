@@ -21,6 +21,12 @@ interface ApiService {
     @POST("api/auth/change-pin")
     suspend fun changePin(@Body body: ChangePinRequest): Response<MessageResponse>
 
+    @POST("api/auth/send-change-email-otp")
+    suspend fun sendChangeEmailOtp(@Body body: SendChangeEmailOtpRequest): Response<MessageResponse>
+
+    @POST("api/auth/change-email")
+    suspend fun changeEmail(@Body body: ChangeEmailRequest): Response<MessageResponse>
+
     @GET("api/users/me")
     suspend fun getMe(): Response<AuthResponse>
 

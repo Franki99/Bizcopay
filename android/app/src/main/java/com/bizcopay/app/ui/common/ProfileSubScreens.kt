@@ -208,12 +208,20 @@ fun ProfileAccountSecurityScreen(
 ) {
     val authViewModel: AuthViewModel = viewModel()
     val changePinState by authViewModel.changePinState.collectAsState()
+    val changeEmailState by authViewModel.changeEmailState.collectAsState()
     var showChangePinDialog by remember { mutableStateOf(false) }
+    var showChangeEmailDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(changePinState) {
         if (changePinState == "success") {
             showChangePinDialog = false
             authViewModel.resetChangePinState()
+        }
+    }
+    LaunchedEffect(changeEmailState) {
+        if (changeEmailState == "success") {
+            showChangeEmailDialog = false
+            authViewModel.resetChangeEmailState()
         }
     }
 
@@ -223,6 +231,51 @@ fun ProfileAccountSecurityScreen(
             .background(BizcoBackground)
     ) {
         item { ProfileSubScreenHeader("Account & Security", onBack) }
+
+        item {
+            Text(
+                "Account",
+                color = BizcoTextSecondary,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+            )
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = BizcoCard)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            authViewModel.resetChangeEmailState()
+                            showChangeEmailDialog = true
+                        }
+                        .padding(horizontal = 20.dp, vertical = 15.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF7C3AED).copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Rounded.Email, contentDescription = null, tint = Color(0xFF7C3AED), modifier = Modifier.size(22.dp))
+                    }
+                    Spacer(Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Change Email", color = BizcoTextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                        Text("Update your account email address", color = BizcoTextSecondary, fontSize = 12.sp)
+                    }
+                    Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = BizcoTextMuted, modifier = Modifier.size(20.dp))
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+        }
 
         item {
             Text(
@@ -306,6 +359,15 @@ fun ProfileAccountSecurityScreen(
             onDismiss = { showChangePinDialog = false; authViewModel.resetChangePinState() }
         )
     }
+
+    if (showChangeEmailDialog) {
+        ProfileChangeEmailDialog(
+            changeEmailState = changeEmailState,
+            onSendCode = { newEmail -> authViewModel.sendChangeEmailOtp(newEmail) },
+            onConfirm = { newEmail, code -> authViewModel.confirmChangeEmail(newEmail, code) },
+            onDismiss = { showChangeEmailDialog = false; authViewModel.resetChangeEmailState() }
+        )
+    }
 }
 
 @Composable
@@ -370,6 +432,115 @@ fun ProfileChangePinDialog(
         dismissButton = {
             TextButton(onClick = { if (!isLoading) onDismiss() }) {
                 Text("Cancel", color = BizcoTextSecondary)
+            }
+        }
+    )
+}
+
+@Composable
+fun ProfileChangeEmailDialog(
+    changeEmailState: String?,
+    onSendCode: (String) -> Unit,
+    onConfirm: (String, String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var newEmail by remember { mutableStateOf("") }
+    var otpCode by remember { mutableStateOf("") }
+    var step by remember { mutableStateOf(1) }
+
+    LaunchedEffect(changeEmailState) {
+        if (changeEmailState == "code_sent") step = 2
+    }
+
+    val isSending = changeEmailState == "sending"
+    val isConfirming = changeEmailState == "confirming"
+    val isLoading = isSending || isConfirming
+    val isError = changeEmailState != null && changeEmailState != "sending" &&
+        changeEmailState != "code_sent" && changeEmailState != "confirming" && changeEmailState != "success"
+
+    val emailValid = newEmail.contains("@") && newEmail.contains(".")
+
+    AlertDialog(
+        onDismissRequest = { if (!isLoading) onDismiss() },
+        containerColor = BizcoCard,
+        title = {
+            Text(
+                if (step == 1) "Change Email" else "Verify New Email",
+                color = BizcoTextPrimary,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column {
+                if (step == 1) {
+                    Text(
+                        "A verification code will be sent to your new email address.",
+                        color = BizcoTextSecondary,
+                        fontSize = 13.sp
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = newEmail,
+                        onValueChange = { newEmail = it },
+                        label = { Text("New Email Address", color = BizcoTextSecondary) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = BizcoBlue, unfocusedBorderColor = BizcoBorder,
+                            focusedTextColor = BizcoTextPrimary, unfocusedTextColor = BizcoTextPrimary,
+                            cursorColor = BizcoBlue
+                        )
+                    )
+                } else {
+                    Text(
+                        "We sent a 6-digit code to $newEmail",
+                        color = BizcoTextSecondary,
+                        fontSize = 13.sp
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = otpCode,
+                        onValueChange = { if (it.length <= 6 && it.all { c -> c.isDigit() }) otpCode = it },
+                        label = { Text("Verification Code", color = BizcoTextSecondary) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = BizcoBlue, unfocusedBorderColor = BizcoBorder,
+                            focusedTextColor = BizcoTextPrimary, unfocusedTextColor = BizcoTextPrimary,
+                            cursorColor = BizcoBlue
+                        )
+                    )
+                }
+                if (isError) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(changeEmailState ?: "", color = BizcoError, fontSize = 13.sp)
+                }
+            }
+        },
+        confirmButton = {
+            if (step == 1) {
+                TextButton(onClick = { onSendCode(newEmail) }, enabled = emailValid && !isSending) {
+                    if (isSending) CircularProgressIndicator(modifier = Modifier.size(18.dp), color = BizcoBlue, strokeWidth = 2.dp)
+                    else Text("Send Code", color = if (emailValid && !isSending) BizcoBlue else BizcoTextMuted, fontWeight = FontWeight.SemiBold)
+                }
+            } else {
+                TextButton(onClick = { onConfirm(newEmail, otpCode) }, enabled = otpCode.length == 6 && !isConfirming) {
+                    if (isConfirming) CircularProgressIndicator(modifier = Modifier.size(18.dp), color = BizcoBlue, strokeWidth = 2.dp)
+                    else Text("Confirm", color = if (otpCode.length == 6 && !isConfirming) BizcoBlue else BizcoTextMuted, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        },
+        dismissButton = {
+            if (step == 2) {
+                TextButton(onClick = { if (!isLoading) { step = 1; otpCode = "" } }) {
+                    Text("Back", color = BizcoTextSecondary)
+                }
+            } else {
+                TextButton(onClick = { if (!isLoading) onDismiss() }) {
+                    Text("Cancel", color = BizcoTextSecondary)
+                }
             }
         }
     )

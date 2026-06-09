@@ -30,6 +30,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val _changePinState = MutableStateFlow<String?>(null)
     val changePinState: StateFlow<String?> = _changePinState
 
+    // null = idle, "sending" = loading step 1, "code_sent" = awaiting code,
+    // "confirming" = loading step 2, "success" = done, else = error message
+    private val _changeEmailState = MutableStateFlow<String?>(null)
+    val changeEmailState: StateFlow<String?> = _changeEmailState
+
     fun resetState() { _state.value = AuthState.Idle }
 
     fun changePin(currentPin: String, newPin: String) {
@@ -46,6 +51,41 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun resetChangePinState() { _changePinState.value = null }
+
+    fun sendChangeEmailOtp(newEmail: String) {
+        viewModelScope.launch {
+            _changeEmailState.value = "sending"
+            try {
+                val r = api.sendChangeEmailOtp(SendChangeEmailOtpRequest(newEmail))
+                if (r.isSuccessful) _changeEmailState.value = "code_sent"
+                else {
+                    val msg = if (r.code() == 409) "This email is already in use" else "Failed to send code"
+                    _changeEmailState.value = msg
+                }
+            } catch (e: Exception) {
+                _changeEmailState.value = "Cannot reach server"
+            }
+        }
+    }
+
+    fun confirmChangeEmail(newEmail: String, otpCode: String) {
+        viewModelScope.launch {
+            _changeEmailState.value = "confirming"
+            try {
+                val r = api.changeEmail(ChangeEmailRequest(newEmail, otpCode))
+                if (r.isSuccessful) {
+                    tokenManager.saveEmail(newEmail)
+                    _changeEmailState.value = "success"
+                } else {
+                    _changeEmailState.value = "Invalid or expired code"
+                }
+            } catch (e: Exception) {
+                _changeEmailState.value = "Cannot reach server"
+            }
+        }
+    }
+
+    fun resetChangeEmailState() { _changeEmailState.value = null }
 
     fun login(email: String, pin: String) {
         viewModelScope.launch {

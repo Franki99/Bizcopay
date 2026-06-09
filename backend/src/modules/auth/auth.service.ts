@@ -5,7 +5,7 @@ import { Role, OtpPurpose } from '@prisma/client'
 import { prisma } from '../../lib/prisma'
 import { env } from '../../config/env'
 import { AppError } from '../../middleware/error.middleware'
-import { verifyOtp } from '../otp/otp.service'
+import { sendOtp, verifyOtp } from '../otp/otp.service'
 
 export const registerSchema = z.object({
   name: z.string().min(2),
@@ -81,6 +81,15 @@ export const changePinSchema = z.object({
   newPin:     z.string().length(4).regex(/^\d{4}$/),
 })
 
+export const sendChangeEmailOtpSchema = z.object({
+  newEmail: z.string().email(),
+})
+
+export const changeEmailSchema = z.object({
+  newEmail: z.string().email(),
+  otpCode:  z.string().length(6),
+})
+
 export const changePin = async (userId: string, currentPin: string, newPin: string): Promise<void> => {
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user) throw new AppError(404, 'User not found')
@@ -88,6 +97,19 @@ export const changePin = async (userId: string, currentPin: string, newPin: stri
   if (!valid) throw new AppError(400, 'Current PIN is incorrect')
   const hashed = await bcrypt.hash(newPin, 10)
   await prisma.user.update({ where: { id: userId }, data: { pin: hashed } })
+}
+
+export async function sendChangeEmailOtp(userId: string, newEmail: string): Promise<void> {
+  const taken = await prisma.user.findUnique({ where: { email: newEmail } })
+  if (taken) throw new AppError(409, 'This email is already in use')
+  await sendOtp(newEmail, OtpPurpose.CHANGE_EMAIL)
+}
+
+export async function changeEmail(userId: string, newEmail: string, otpCode: string): Promise<void> {
+  const taken = await prisma.user.findUnique({ where: { email: newEmail } })
+  if (taken) throw new AppError(409, 'This email is already in use')
+  await verifyOtp(newEmail, otpCode, OtpPurpose.CHANGE_EMAIL)
+  await prisma.user.update({ where: { id: userId }, data: { email: newEmail } })
 }
 
 function signToken(userId: string, role: Role) {
