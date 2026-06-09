@@ -77,33 +77,15 @@ export async function resolveNfc(transactionId: string, nfcUid: string) {
     return { status: TransactionStatus.FAILED, riskScore: fraud.riskScore }
   }
 
-  if (fraud.riskScore === RiskScore.MEDIUM) {
-    await prisma.transaction.update({
-      where: { id: transactionId },
-      data: { status: TransactionStatus.AWAITING_PIN },
-    })
-    const payload = { transactionId, amount, merchantName: transaction.merchant.name }
-    io.to(`transaction:${transactionId}`).emit('payment:pending_pin', payload)
-    // Notify payer directly in case they haven't joined the transaction room yet
-    io.to(`user:${payer.id}`).emit('payment:pending_pin', payload)
-    return { status: TransactionStatus.AWAITING_PIN, riskScore: fraud.riskScore }
-  }
-
-  // LOW risk — check balance then auto-approve
-  if (!payer.wallet || Number(payer.wallet.balance) < amount) {
-    await prisma.transaction.update({
-      where: { id: transactionId },
-      data: { status: TransactionStatus.FAILED, failureReason: 'Insufficient balance' },
-    })
-    io.to(`transaction:${transactionId}`).emit('payment:failed', {
-      transactionId,
-      reason: 'Insufficient balance',
-    })
-    return { status: TransactionStatus.FAILED }
-  }
-
-  await processPayment(transactionId, payer.id, transaction.merchantId, amount)
-  return { status: TransactionStatus.APPROVED }
+  // MEDIUM and LOW risk both require PIN — always prompt the payer
+  await prisma.transaction.update({
+    where: { id: transactionId },
+    data: { status: TransactionStatus.AWAITING_PIN },
+  })
+  const payload = { transactionId, amount, merchantName: transaction.merchant.name }
+  io.to(`transaction:${transactionId}`).emit('payment:pending_pin', payload)
+  io.to(`user:${payer.id}`).emit('payment:pending_pin', payload)
+  return { status: TransactionStatus.AWAITING_PIN, riskScore: fraud.riskScore }
 }
 
 export async function approveWithPin(transactionId: string, pin: string) {
