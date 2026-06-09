@@ -22,7 +22,7 @@ sealed class AuthState {
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val tokenManager = TokenManager(application)
-    private val api = ApiClient.create()
+    private val api = ApiClient.create(tokenManager)
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
     val state: StateFlow<AuthState> = _state

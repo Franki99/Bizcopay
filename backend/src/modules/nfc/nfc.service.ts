@@ -17,7 +17,7 @@ export async function registerToken(userId: string, data: z.infer<typeof registe
   const existing = await prisma.nfcToken.findUnique({ where: { uid: data.uid } })
 
   if (existing) {
-    if (existing.isActive) throw new AppError(409, 'NFC token already registered to another account')
+    if (existing.isActive) throw new AppError(409, 'This NFC device is already registered to another account')
     // Token was deactivated (returned/removed) — reassign it to this user
     return prisma.nfcToken.update({
       where: { id: existing.id },
@@ -45,7 +45,7 @@ export async function assignToken(data: z.infer<typeof assignTokenSchema>) {
   const existing = await prisma.nfcToken.findUnique({ where: { uid: data.uid } })
 
   if (existing) {
-    if (existing.isActive) throw new AppError(409, 'NFC token already registered to another account')
+    if (existing.isActive) throw new AppError(409, 'This NFC device is already registered to another account')
     return prisma.nfcToken.update({
       where: { id: existing.id },
       data: { isActive: true, userId: data.userId, label: data.label ?? existing.label },

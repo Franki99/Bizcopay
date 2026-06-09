@@ -219,7 +219,7 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
                     loadTokens()
                 } else {
                     val code = response.code()
-                    val msg = if (code == 409) "This token is already registered"
+                    val msg = if (code == 409) "This device is already registered to another account"
                               else "Registration failed"
                     _registrationState.value = NfcRegistrationState.Error(msg)
                 }
