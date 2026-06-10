@@ -1,13 +1,15 @@
 import nodemailer from 'nodemailer'
 
-const DEV_MODE = !process.env.EMAIL_USER || !process.env.EMAIL_PASS
+const DEV_MODE = !process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD
 
 const transporter = DEV_MODE
   ? null
   : nodemailer.createTransport({
       service: 'gmail',
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_APP_PASSWORD },
     })
+
+const FROM_ADDRESS = process.env.EMAIL_FROM || process.env.EMAIL_USER
 
 export async function sendOtpEmail(to: string, code: string, purpose: 'REGISTER' | 'RESET_PIN' | 'CHANGE_EMAIL') {
   const action = purpose === 'REGISTER' ? 'complete your registration'
@@ -23,7 +25,7 @@ export async function sendOtpEmail(to: string, code: string, purpose: 'REGISTER'
   }
 
   await transporter!.sendMail({
-    from: `"Bizcopay" <${process.env.EMAIL_USER}>`,
+    from: `"Bizcopay" <${FROM_ADDRESS}>`,
     to,
     subject,
     html: `
