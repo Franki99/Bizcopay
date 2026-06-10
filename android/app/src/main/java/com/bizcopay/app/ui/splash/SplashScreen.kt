@@ -21,12 +21,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
 import com.bizcopay.app.ui.navigation.Screen
 import com.bizcopay.app.ui.theme.*
 
@@ -74,6 +80,7 @@ fun SplashScreen(navController: NavController) {
 
 @Composable
 private fun SplashPage1(onNext: () -> Unit) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -81,29 +88,19 @@ private fun SplashPage1(onNext: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
+        AsyncImage(
+            model = ImageRequest.Builder(context)
+                .data("file:///android_asset/bizcopay_logo.svg")
+                .decoderFactory(SvgDecoder.Factory())
+                .build(),
+            contentDescription = "Bizcopay",
+            colorFilter = ColorFilter.tint(BizcoOnDark),
+            contentScale = ContentScale.Fit,
             modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.15f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Nfc,
-                contentDescription = null,
-                tint = BizcoOnDark,
-                modifier = Modifier.size(64.dp)
-            )
-        }
-        Spacer(Modifier.height(48.dp))
-        Text(
-            "Bizcopay",
-            color = BizcoOnDark,
-            fontSize = 40.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = (-1).sp
+                .fillMaxWidth()
+                .height(120.dp)
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(32.dp))
         Text(
             "Seamless contactless payments\nat your fingertips",
             color = BizcoOnDark.copy(alpha = 0.65f),

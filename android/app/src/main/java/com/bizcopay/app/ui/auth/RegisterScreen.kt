@@ -12,6 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -19,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
 import com.bizcopay.app.ui.navigation.Screen
 import com.bizcopay.app.ui.theme.*
 
@@ -30,6 +36,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
     var pin by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf("PAYER") }
     var otpCode by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     val otpSent = state is AuthState.RegisterOtpSent
 
@@ -54,15 +61,18 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Logo
-            Box(
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data("file:///android_asset/bizcopay_logo.svg")
+                    .decoderFactory(SvgDecoder.Factory())
+                    .build(),
+                contentDescription = "Bizcopay",
+                colorFilter = ColorFilter.tint(BizcoTextPrimary),
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .size(64.dp)
-                    .background(
-                        Brush.radialGradient(listOf(BizcoBlue, BizcoBlueDark)),
-                        shape = RoundedCornerShape(18.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) { Icon(Icons.Rounded.Nfc, contentDescription = null, tint = Color.White, modifier = Modifier.size(34.dp)) }
+                    .fillMaxWidth(0.65f)
+                    .height(64.dp)
+            )
             Spacer(Modifier.height(20.dp))
             Text(
                 if (!otpSent) "Create Account" else "Verify Email",

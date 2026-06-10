@@ -12,6 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -21,6 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
 import com.bizcopay.app.ui.navigation.Screen
 import com.bizcopay.app.ui.theme.*
 
@@ -29,6 +35,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
     val state by viewModel.state.collectAsState()
     var email by remember { mutableStateOf("") }
     var pin   by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     LaunchedEffect(state) {
         if (state is AuthState.Success) {
@@ -50,15 +57,18 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Logo
-            Box(
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data("file:///android_asset/bizcopay_logo.svg")
+                    .decoderFactory(SvgDecoder.Factory())
+                    .build(),
+                contentDescription = "Bizcopay",
+                colorFilter = ColorFilter.tint(BizcoTextPrimary),
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .size(72.dp)
-                    .background(
-                        Brush.radialGradient(listOf(BizcoBlue, BizcoBlueDark)),
-                        shape = RoundedCornerShape(20.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) { Icon(Icons.Rounded.Nfc, contentDescription = null, tint = Color.White, modifier = Modifier.size(38.dp)) }
+                    .fillMaxWidth(0.65f)
+                    .height(72.dp)
+            )
             Spacer(Modifier.height(24.dp))
             Text("Welcome Back!", color = BizcoTextPrimary, fontSize = 28.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
