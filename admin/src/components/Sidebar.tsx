@@ -9,6 +9,7 @@ const links = [
   { href: '/users',        label: 'Users',        icon: '👥' },
   { href: '/transactions', label: 'Transactions', icon: '💳' },
   { href: '/fraud',        label: 'Fraud Alerts', icon: '🛡️' },
+  { href: '/analytics',   label: 'Analytics',    icon: '📊' },
 ]
 
 export default function Sidebar() {
