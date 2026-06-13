@@ -18,6 +18,9 @@ export default function PageShell({ children }: Props) {
   useEffect(() => {
     if (!isLoggedIn()) { router.push('/login'); return }
     api.getMe().then(setUser).catch(() => router.push('/login'))
+    const refresh = () => api.getMe().then(setUser).catch(() => {})
+    window.addEventListener('user-updated', refresh)
+    return () => window.removeEventListener('user-updated', refresh)
   }, [router])
 
   return (

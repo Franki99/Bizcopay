@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import { api, User } from '@/lib/api'
 import PageShell from '@/components/PageShell'
 
-type PinState = { current: string; next: string; confirm: string }
+type PinState  = { current: string; next: string; confirm: string }
 type EmailState = { newEmail: string; otp: string; otpSent: boolean }
+type Msg = { ok: boolean; text: string }
 
 function Avatar({ src, name, size = 20 }: { src: string | null; name?: string; size?: number }) {
   const initials = name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'A'
@@ -22,30 +23,46 @@ function Avatar({ src, name, size = 20 }: { src: string | null; name?: string; s
   )
 }
 
+function Msg({ msg }: { msg: Msg | null }) {
+  if (!msg) return null
+  return (
+    <p className={`text-sm ${msg.ok ? 'text-green-600' : 'text-red-600'}`}>{msg.text}</p>
+  )
+}
+
 export default function ProfilePage() {
-  const router = useRouter()
+  const router  = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const [user, setUser] = useState<User | null>(null)
-  const [avatar, setAvatar] = useState<string | null>(null)
+  const [user,    setUser]    = useState<User | null>(null)
+  const [avatar,  setAvatar]  = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const [pin, setPin] = useState<PinState>({ current: '', next: '', confirm: '' })
-  const [pinMsg, setPinMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  // name editing
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput,   setNameInput]   = useState('')
+  const [nameMsg,     setNameMsg]     = useState<Msg | null>(null)
+  const [nameLoading, setNameLoading] = useState(false)
+
+  // PIN
+  const [pin,       setPin]       = useState<PinState>({ current: '', next: '', confirm: '' })
+  const [pinMsg,    setPinMsg]    = useState<Msg | null>(null)
   const [pinLoading, setPinLoading] = useState(false)
 
-  const [email, setEmail] = useState<EmailState>({ newEmail: '', otp: '', otpSent: false })
-  const [emailMsg, setEmailMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  // Email
+  const [email,        setEmail]        = useState<EmailState>({ newEmail: '', otp: '', otpSent: false })
+  const [emailMsg,     setEmailMsg]     = useState<Msg | null>(null)
   const [emailLoading, setEmailLoading] = useState(false)
 
   useEffect(() => {
     api.getMe()
-      .then(setUser)
+      .then(u => { setUser(u); setNameInput(u.name) })
       .catch(() => router.push('/login'))
       .finally(() => setLoading(false))
     setAvatar(localStorage.getItem('bizcopay_admin_avatar'))
   }, [router])
 
+  // Avatar handlers
   function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -58,7 +75,6 @@ export default function ProfilePage() {
     }
     reader.readAsDataURL(file)
   }
-
   function removeAvatar() {
     localStorage.removeItem('bizcopay_admin_avatar')
     setAvatar(null)
@@ -66,13 +82,29 @@ export default function ProfilePage() {
     if (fileRef.current) fileRef.current.value = ''
   }
 
+  // Name handlers
+  async function saveName(e: React.FormEvent) {
+    e.preventDefault()
+    setNameMsg(null)
+    setNameLoading(true)
+    try {
+      const updated = await api.updateMe(nameInput)
+      setUser(updated)
+      setEditingName(false)
+      setNameMsg({ ok: true, text: 'Name updated successfully.' })
+      window.dispatchEvent(new Event('user-updated'))
+    } catch (err: any) {
+      setNameMsg({ ok: false, text: err.message ?? 'Failed to update name.' })
+    } finally {
+      setNameLoading(false)
+    }
+  }
+
+  // PIN handlers
   async function handlePinChange(e: React.FormEvent) {
     e.preventDefault()
     setPinMsg(null)
-    if (pin.next !== pin.confirm) {
-      setPinMsg({ ok: false, text: 'New PINs do not match.' })
-      return
-    }
+    if (pin.next !== pin.confirm) { setPinMsg({ ok: false, text: 'New PINs do not match.' }); return }
     setPinLoading(true)
     try {
       await api.changePin(pin.current, pin.next)
@@ -85,6 +117,7 @@ export default function ProfilePage() {
     }
   }
 
+  // Email handlers
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault()
     setEmailMsg(null)
@@ -92,21 +125,20 @@ export default function ProfilePage() {
     try {
       await api.sendChangeEmailOtp(email.newEmail)
       setEmail(s => ({ ...s, otpSent: true }))
-      setEmailMsg({ ok: true, text: 'OTP sent to your current email address.' })
+      setEmailMsg({ ok: true, text: 'OTP sent. Check your email — or the backend terminal if email is not configured.' })
     } catch (err: any) {
       setEmailMsg({ ok: false, text: err.message ?? 'Failed to send OTP.' })
     } finally {
       setEmailLoading(false)
     }
   }
-
   async function handleEmailChange(e: React.FormEvent) {
     e.preventDefault()
     setEmailMsg(null)
     setEmailLoading(true)
     try {
       await api.changeEmail(email.newEmail, email.otp)
-      setEmailMsg({ ok: true, text: 'Email updated. Please log in again.' })
+      setEmailMsg({ ok: true, text: 'Email updated. Redirecting to login…' })
       setTimeout(() => router.push('/login'), 1500)
     } catch (err: any) {
       setEmailMsg({ ok: false, text: err.message ?? 'Failed to change email.' })
@@ -135,17 +167,13 @@ export default function ProfilePage() {
               <Avatar src={avatar} name={user?.name} size={20} />
               <div className="space-y-2">
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => fileRef.current?.click()}
-                    className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
+                  <button onClick={() => fileRef.current?.click()}
+                    className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     {avatar ? 'Change Photo' : 'Upload Photo'}
                   </button>
                   {avatar && (
-                    <button
-                      onClick={removeAvatar}
-                      className="px-4 py-2 text-sm font-medium bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                    >
+                    <button onClick={removeAvatar}
+                      className="px-4 py-2 text-sm font-medium bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
                       Remove
                     </button>
                   )}
@@ -155,18 +183,53 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="mt-6 pt-5 border-t border-gray-100 grid grid-cols-2 gap-4">
-              {[
-                { label: 'Full Name', value: user?.name },
-                { label: 'Email',     value: user?.email },
-                { label: 'Role',      value: user?.role },
-                { label: 'Status',    value: user?.isActive ? 'Active' : 'Inactive' },
-              ].map(f => (
-                <div key={f.label}>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">{f.label}</p>
-                  <p className="text-sm font-semibold text-gray-900 mt-0.5">{f.value ?? '—'}</p>
-                </div>
-              ))}
+            {/* Account Info */}
+            <div className="mt-6 pt-5 border-t border-gray-100 space-y-4">
+              {/* Editable Name */}
+              <div>
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Full Name</p>
+                {editingName ? (
+                  <form onSubmit={saveName} className="flex items-center gap-2">
+                    <input
+                      value={nameInput}
+                      onChange={e => setNameInput(e.target.value)}
+                      className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      autoFocus
+                    />
+                    <button type="submit" disabled={nameLoading}
+                      className="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                      {nameLoading ? '…' : 'Save'}
+                    </button>
+                    <button type="button" onClick={() => { setEditingName(false); setNameInput(user?.name ?? ''); setNameMsg(null) }}
+                      className="px-3 py-1.5 text-sm font-medium bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+                      Cancel
+                    </button>
+                  </form>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
+                    <button onClick={() => { setEditingName(true); setNameMsg(null) }}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                      Edit
+                    </button>
+                  </div>
+                )}
+                <Msg msg={nameMsg} />
+              </div>
+
+              {/* Read-only fields */}
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { label: 'Email',  value: user?.email },
+                  { label: 'Role',   value: user?.role },
+                  { label: 'Status', value: user?.isActive ? 'Active' : 'Inactive' },
+                ].map(f => (
+                  <div key={f.label}>
+                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">{f.label}</p>
+                    <p className="text-sm font-semibold text-gray-900 mt-0.5">{f.value ?? '—'}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -174,29 +237,20 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <h3 className="text-base font-semibold text-gray-800 mb-1">Change PIN</h3>
             <p className="text-xs text-gray-400 mb-5">Your PIN must be exactly 4 digits.</p>
-
             <form onSubmit={handlePinChange} className="space-y-4">
-              {[
-                { label: 'Current PIN', key: 'current' as const },
-                { label: 'New PIN',     key: 'next'    as const },
-                { label: 'Confirm PIN', key: 'confirm' as const },
-              ].map(f => (
-                <div key={f.key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
+              {([['current', 'Current PIN'], ['next', 'New PIN'], ['confirm', 'Confirm New PIN']] as const).map(([key, label]) => (
+                <div key={key}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
                   <input
                     type="password" inputMode="numeric" maxLength={4} required
-                    value={pin[f.key]}
-                    onChange={e => setPin(s => ({ ...s, [f.key]: e.target.value }))}
+                    value={pin[key]}
+                    onChange={e => setPin(s => ({ ...s, [key]: e.target.value }))}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-widest"
                     placeholder="••••"
                   />
                 </div>
               ))}
-
-              {pinMsg && (
-                <p className={`text-sm ${pinMsg.ok ? 'text-green-600' : 'text-red-600'}`}>{pinMsg.text}</p>
-              )}
-
+              <Msg msg={pinMsg} />
               <button type="submit" disabled={pinLoading}
                 className="w-full py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
                 {pinLoading ? 'Saving…' : 'Save PIN'}
@@ -207,9 +261,17 @@ export default function ProfilePage() {
           {/* Change Email */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <h3 className="text-base font-semibold text-gray-800 mb-1">Change Email</h3>
-            <p className="text-xs text-gray-400 mb-5">
+            <p className="text-xs text-gray-400 mb-1">
               An OTP will be sent to your <span className="font-medium text-gray-600">current email</span> to verify the change.
             </p>
+            <div className="flex items-start gap-2 mb-5 p-3 bg-blue-50 rounded-lg">
+              <svg className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-xs text-blue-700">
+                If email is not configured, the OTP code is printed in the <span className="font-mono font-semibold">backend terminal</span> instead.
+              </p>
+            </div>
 
             <form onSubmit={email.otpSent ? handleEmailChange : handleSendOtp} className="space-y-4">
               <div>
@@ -223,7 +285,6 @@ export default function ProfilePage() {
                   placeholder="new@email.com"
                 />
               </div>
-
               {email.otpSent && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">OTP Code</label>
@@ -236,11 +297,7 @@ export default function ProfilePage() {
                   />
                 </div>
               )}
-
-              {emailMsg && (
-                <p className={`text-sm ${emailMsg.ok ? 'text-green-600' : 'text-red-600'}`}>{emailMsg.text}</p>
-              )}
-
+              <Msg msg={emailMsg} />
               <div className="flex gap-3">
                 <button type="submit" disabled={emailLoading}
                   className="flex-1 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">

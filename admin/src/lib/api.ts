@@ -61,6 +61,15 @@ export const api = {
 
   getMe: () => request<User>('/api/users/me'),
 
+  updateMe: (name: string) =>
+    request<User>('/api/users/me', { method: 'PATCH', body: JSON.stringify({ name }) }),
+
+  sendResetPinOtp: (email: string) =>
+    request<void>('/api/otp/send', { method: 'POST', body: JSON.stringify({ email, purpose: 'RESET_PIN' }) }),
+
+  resetPin: (email: string, otpCode: string, newPin: string) =>
+    request<void>('/api/auth/reset-pin', { method: 'POST', body: JSON.stringify({ email, otpCode, newPin }) }),
+
   getUsers: () => request<User[]>('/api/users'),
 
   deactivateUser: (userId: string) =>

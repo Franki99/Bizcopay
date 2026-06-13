@@ -16,6 +16,18 @@ export async function getAllUsers() {
   return users.map(({ pin: _pin, ...rest }) => rest)
 }
 
+export async function updateMe(userId: string, name: string) {
+  const trimmed = name.trim()
+  if (!trimmed) throw new AppError(400, 'Name cannot be empty')
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { name: trimmed },
+    include: { wallet: true, nfcTokens: { where: { isActive: true } } },
+  })
+  const { pin: _pin, ...rest } = user
+  return rest
+}
+
 export async function deactivateUser(userId: string) {
   return prisma.user.update({ where: { id: userId }, data: { isActive: false } })
 }
