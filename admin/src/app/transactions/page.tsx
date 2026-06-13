@@ -79,7 +79,7 @@ export default function TransactionsPage() {
                   <tr key={tx.id} className={`hover:bg-gray-50 ${tx.fraudLog ? 'bg-red-50/30' : ''}`}>
                     <td className="px-4 py-3 font-medium">{tx.merchant.name}</td>
                     <td className="px-4 py-3 text-gray-500">{tx.payer?.name ?? '—'}</td>
-                    <td className="px-4 py-3 font-semibold">${tx.amount}</td>
+                    <td className="px-4 py-3 font-semibold">RWF {tx.amount}</td>
                     <td className="px-4 py-3 text-gray-400">{tx.description ?? '—'}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[tx.status] ?? 'bg-gray-100 text-gray-600'}`}>

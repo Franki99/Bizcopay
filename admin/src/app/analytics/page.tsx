@@ -45,9 +45,9 @@ export default function AnalyticsPage() {
   const avgTx = approved.length ? totalVolume / approved.length : 0
 
   const kpis = [
-    { label: 'Total Volume',    value: `$${totalVolume.toFixed(2)}`, sub: `${approved.length} approved txns` },
-    { label: 'Approval Rate',   value: `${approvalRate.toFixed(1)}%`, sub: `${failed.length} failed` },
-    { label: 'Avg Transaction', value: `$${avgTx.toFixed(2)}`,        sub: 'approved only' },
+    { label: 'Total Volume',    value: `RWF ${totalVolume.toFixed(2)}`, sub: `${approved.length} approved txns` },
+    { label: 'Approval Rate',   value: `${approvalRate.toFixed(1)}%`,  sub: `${failed.length} failed` },
+    { label: 'Avg Transaction', value: `RWF ${avgTx.toFixed(2)}`,      sub: 'approved only' },
     { label: 'Fraud Rate',      value: `${fraudRate.toFixed(1)}%`,    sub: `${fraudulent.length} flagged` },
   ]
 

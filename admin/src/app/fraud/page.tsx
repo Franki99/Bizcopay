@@ -66,7 +66,7 @@ export default function FraudPage() {
                       <p className="text-xs mt-1">
                         Merchant: <span className="font-medium">{tx.merchant.name}</span>
                         {tx.payer && <> · Payer: <span className="font-medium">{tx.payer.name}</span></>}
-                        · Amount: <span className="font-medium">${tx.amount}</span>
+                        · Amount: <span className="font-medium">RWF {tx.amount}</span>
                       </p>
                       <p className="text-xs mt-0.5 opacity-70">
                         Details: {JSON.stringify(tx.fraudLog!.details)}

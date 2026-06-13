@@ -77,9 +77,9 @@ export default function Charts({ transactions }: ChartProps) {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false}
-                tickFormatter={(v: number) => `$${v}`} />
+                tickFormatter={(v: number) => `RWF ${v}`} />
               <Tooltip
-                formatter={(v: number) => [`$${v.toFixed(2)}`, 'Volume']}
+                formatter={(v) => [`RWF ${Number(v).toFixed(2)}`, 'Volume']}
                 contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
               />
               <Bar dataKey="volume" fill="#6366f1" radius={[4, 4, 0, 0]} />
@@ -101,7 +101,7 @@ export default function Charts({ transactions }: ChartProps) {
                 <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <Tooltip
-                  formatter={(v: number) => [v, 'Transactions']}
+                  formatter={(v) => [v, 'Transactions']}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
                 />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]}>
@@ -151,7 +151,7 @@ export default function Charts({ transactions }: ChartProps) {
                   <div className="h-2 bg-indigo-500 rounded-full"
                     style={{ width: `${(m.volume / maxVolume) * 100}%` }} />
                 </div>
-                <span className="text-sm font-semibold text-gray-900 w-24 text-right">${m.volume.toFixed(2)}</span>
+                <span className="text-sm font-semibold text-gray-900 w-24 text-right">RWF {m.volume.toFixed(2)}</span>
                 <span className="text-xs text-gray-400 w-16 text-right">{m.count} txns</span>
               </div>
             ))}

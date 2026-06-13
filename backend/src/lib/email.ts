@@ -5,7 +5,9 @@ const DEV_MODE = !process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD
 const transporter = DEV_MODE
   ? null
   : nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_APP_PASSWORD },
     })
 
@@ -19,10 +21,9 @@ export async function sendOtpEmail(to: string, code: string, purpose: 'REGISTER'
     : purpose === 'RESET_PIN' ? 'Reset your Bizcopay PIN'
     : 'Confirm your new Bizcopay email'
 
-  if (DEV_MODE) {
-    console.log(`\n📧  OTP for ${to} [${purpose}]: ${code}  (expires in 10 min)\n`)
-    return
-  }
+  console.log(`\n📧  OTP for ${to} [${purpose}]: ${code}  (expires in 10 min)\n`)
+
+  if (DEV_MODE) return
 
   await transporter!.sendMail({
     from: `"Bizcopay" <${FROM_ADDRESS}>`,
