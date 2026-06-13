@@ -6,6 +6,9 @@ import { api, User } from '@/lib/api'
 import PageShell from '@/components/PageShell'
 import TopUpModal from '@/components/TopUpModal'
 import AssignNfcModal from '@/components/AssignNfcModal'
+import Pagination from '@/components/Pagination'
+
+const PAGE_SIZE = 6
 
 const ROLE_FILTERS = ['ALL', 'PAYER', 'MERCHANT', 'ADMIN'] as const
 type RoleFilter = typeof ROLE_FILTERS[number]
@@ -46,6 +49,7 @@ export default function UsersPage() {
   const [nfcTarget,    setNfcTarget]    = useState<User | null>(null)
   const [search,       setSearch]       = useState('')
   const [roleFilter,   setRoleFilter]   = useState<RoleFilter>('ALL')
+  const [page,         setPage]         = useState(1)
 
   async function load() {
     try { setUsers(await api.getUsers()) }
@@ -66,6 +70,12 @@ export default function UsersPage() {
                         u.email.toLowerCase().includes(search.toLowerCase())
     return matchRole && matchSearch
   })
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage   = Math.min(page, totalPages)
+  const paginated  = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
+  function applyFilter(fn: () => void) { fn(); setPage(1) }
 
   const payers    = users.filter(u => u.role === 'PAYER')
   const merchants = users.filter(u => u.role === 'MERCHANT')
@@ -129,14 +139,14 @@ export default function UsersPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
-                value={search} onChange={e => setSearch(e.target.value)}
+                value={search} onChange={e => applyFilter(() => setSearch(e.target.value))}
                 placeholder="Search by name or email…"
                 className="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               />
             </div>
             <div className="flex gap-1.5">
               {ROLE_FILTERS.map(r => (
-                <button key={r} onClick={() => setRoleFilter(r)}
+                <button key={r} onClick={() => applyFilter(() => setRoleFilter(r))}
                   className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                     roleFilter === r
                       ? 'bg-blue-600 text-white shadow-sm'
@@ -159,7 +169,7 @@ export default function UsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((user, i) => (
+                {paginated.map((user, i) => (
                   <tr key={user.id} className={`hover:bg-gray-50 transition-colors ${i !== 0 ? 'border-t border-gray-50' : ''}`}>
                     {/* User avatar + name */}
                     <td className="px-5 py-3.5">
@@ -239,7 +249,7 @@ export default function UsersPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         <p className="text-sm text-gray-400">No users match your search</p>
-                        <button onClick={() => { setSearch(''); setRoleFilter('ALL') }}
+                        <button onClick={() => applyFilter(() => { setSearch(''); setRoleFilter('ALL') })}
                           className="text-xs text-blue-600 hover:text-blue-700 mt-1">
                           Clear filters
                         </button>
@@ -249,6 +259,13 @@ export default function UsersPage() {
                 )}
               </tbody>
             </table>
+            <Pagination
+              page={safePage}
+              totalPages={totalPages}
+              totalItems={filtered.length}
+              pageSize={PAGE_SIZE}
+              onChange={setPage}
+            />
           </div>
         </>
       )}

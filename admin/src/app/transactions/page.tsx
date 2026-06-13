@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { api, Transaction } from '@/lib/api'
 import PageShell from '@/components/PageShell'
+import Pagination from '@/components/Pagination'
+
+const PAGE_SIZE = 6
 
 const STATUS_OPTIONS = ['ALL', 'APPROVED', 'FAILED', 'PENDING', 'AWAITING_PIN', 'EXPIRED'] as const
 type StatusFilter = typeof STATUS_OPTIONS[number]
@@ -67,6 +70,7 @@ export default function TransactionsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
   const [riskFilter,   setRiskFilter]   = useState<RiskFilter>('ALL')
   const [search,       setSearch]       = useState('')
+  const [page,         setPage]         = useState(1)
 
   useEffect(() => {
     api.getTransactions()
@@ -86,6 +90,12 @@ export default function TransactionsPage() {
     }
     return true
   })
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage   = Math.min(page, totalPages)
+  const paginated  = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
+  function applyFilter(fn: () => void) { fn(); setPage(1) }
 
   const approved  = transactions.filter(t => t.status === 'APPROVED')
   const failed    = transactions.filter(t => t.status === 'FAILED')
@@ -164,7 +174,7 @@ export default function TransactionsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
-                value={search} onChange={e => setSearch(e.target.value)}
+                value={search} onChange={e => applyFilter(() => setSearch(e.target.value))}
                 placeholder="Search merchant, payer, or amount…"
                 className="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               />
@@ -173,7 +183,7 @@ export default function TransactionsPage() {
             {/* Status filter */}
             <div className="flex gap-1.5 flex-wrap">
               {STATUS_OPTIONS.map(s => (
-                <button key={s} onClick={() => setStatusFilter(s)}
+                <button key={s} onClick={() => applyFilter(() => setStatusFilter(s))}
                   className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                     statusFilter === s ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                   }`}>
@@ -185,7 +195,7 @@ export default function TransactionsPage() {
             {/* Risk filter */}
             <div className="flex gap-1.5">
               {RISK_OPTIONS.map(r => (
-                <button key={r} onClick={() => setRiskFilter(r)}
+                <button key={r} onClick={() => applyFilter(() => setRiskFilter(r))}
                   className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                     riskFilter === r
                       ? r === 'HIGH'   ? 'bg-red-600 text-white shadow-sm'
@@ -204,7 +214,7 @@ export default function TransactionsPage() {
           {(search || statusFilter !== 'ALL' || riskFilter !== 'ALL') && (
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs text-gray-400">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</p>
-              <button onClick={() => { setSearch(''); setStatusFilter('ALL'); setRiskFilter('ALL') }}
+              <button onClick={() => applyFilter(() => { setSearch(''); setStatusFilter('ALL'); setRiskFilter('ALL') })}
                 className="text-xs text-blue-600 hover:text-blue-700 font-medium">
                 Clear filters
               </button>
@@ -222,7 +232,7 @@ export default function TransactionsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((tx, i) => (
+                {paginated.map((tx, i) => (
                   <tr key={tx.id}
                     className={`hover:bg-gray-50 transition-colors ${i !== 0 ? 'border-t border-gray-50' : ''} ${tx.fraudLog ? 'bg-red-50/40' : ''}`}>
 
@@ -303,7 +313,7 @@ export default function TransactionsPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
                         <p className="text-sm text-gray-400">No transactions match your filters</p>
-                        <button onClick={() => { setSearch(''); setStatusFilter('ALL'); setRiskFilter('ALL') }}
+                        <button onClick={() => applyFilter(() => { setSearch(''); setStatusFilter('ALL'); setRiskFilter('ALL') })}
                           className="text-xs text-blue-600 hover:text-blue-700 mt-1">Clear filters</button>
                       </div>
                     </td>
@@ -311,6 +321,13 @@ export default function TransactionsPage() {
                 )}
               </tbody>
             </table>
+            <Pagination
+              page={safePage}
+              totalPages={totalPages}
+              totalItems={filtered.length}
+              pageSize={PAGE_SIZE}
+              onChange={setPage}
+            />
           </div>
         </>
       )}
