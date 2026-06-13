@@ -25,7 +25,8 @@ export async function sendOtpEmail(to: string, code: string, purpose: 'REGISTER'
 
   if (DEV_MODE) return
 
-  await transporter!.sendMail({
+  // Fire-and-forget: don't block the API response on SMTP
+  transporter!.sendMail({
     from: `"Bizcopay" <${FROM_ADDRESS}>`,
     to,
     subject,
@@ -38,5 +39,5 @@ export async function sendOtpEmail(to: string, code: string, purpose: 'REGISTER'
         </div>
         <p style="color:#666;font-size:14px">This code expires in 10 minutes. Do not share it with anyone.</p>
       </div>`,
-  })
+  }).catch(err => console.error(`📧  Email delivery failed for ${to}:`, err.message))
 }
