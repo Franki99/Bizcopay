@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { api, Transaction } from '@/lib/api'
-import { isLoggedIn } from '@/lib/auth'
-import Sidebar from '@/components/Sidebar'
+import PageShell from '@/components/PageShell'
 
 const STATUS_OPTIONS = ['ALL', 'APPROVED', 'FAILED', 'PENDING', 'AWAITING_PIN', 'EXPIRED']
 
@@ -29,7 +28,6 @@ export default function TransactionsPage() {
   const [statusFilter, setStatusFilter] = useState('ALL')
 
   useEffect(() => {
-    if (!isLoggedIn()) { router.push('/login'); return }
     api.getTransactions()
       .then(setTransactions)
       .catch(() => router.push('/login'))
@@ -40,69 +38,70 @@ export default function TransactionsPage() {
     ? transactions
     : transactions.filter(t => t.status === statusFilter)
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center"><p className="text-gray-400">Loading...</p></div>
-
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Transactions</h2>
-            <p className="text-sm text-gray-500 mt-1">{transactions.length} total</p>
-          </div>
-          <div className="flex gap-2 flex-wrap justify-end">
-            {STATUS_OPTIONS.map(s => (
-              <button key={s} onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  statusFilter === s
-                    ? 'bg-brand-600 text-white'
-                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                }`}>
-                {s}
-              </button>
-            ))}
-          </div>
+    <PageShell>
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
         </div>
-
-        <div className="mt-6 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
-              <tr>
-                {['Merchant', 'Payer', 'Amount', 'Description', 'Status', 'Risk', 'Date'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {filtered.map(tx => (
-                <tr key={tx.id} className={`hover:bg-gray-50 ${tx.fraudLog ? 'bg-red-50/30' : ''}`}>
-                  <td className="px-4 py-3 font-medium">{tx.merchant.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{tx.payer?.name ?? '—'}</td>
-                  <td className="px-4 py-3 font-semibold">${tx.amount}</td>
-                  <td className="px-4 py-3 text-gray-400">{tx.description ?? '—'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[tx.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                      {tx.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${riskColor[tx.riskScore]}`}>
-                      {tx.riskScore}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">
-                    {new Date(tx.createdAt).toLocaleString()}
-                  </td>
-                </tr>
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Transactions</h2>
+              <p className="text-sm text-gray-500 mt-1">{transactions.length} total</p>
+            </div>
+            <div className="flex gap-2 flex-wrap justify-end">
+              {STATUS_OPTIONS.map(s => (
+                <button key={s} onClick={() => setStatusFilter(s)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    statusFilter === s
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}>
+                  {s}
+                </button>
               ))}
-              {filtered.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No transactions found</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </main>
-    </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                <tr>
+                  {['Merchant', 'Payer', 'Amount', 'Description', 'Status', 'Risk', 'Date'].map(h => (
+                    <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filtered.map(tx => (
+                  <tr key={tx.id} className={`hover:bg-gray-50 ${tx.fraudLog ? 'bg-red-50/30' : ''}`}>
+                    <td className="px-4 py-3 font-medium">{tx.merchant.name}</td>
+                    <td className="px-4 py-3 text-gray-500">{tx.payer?.name ?? '—'}</td>
+                    <td className="px-4 py-3 font-semibold">${tx.amount}</td>
+                    <td className="px-4 py-3 text-gray-400">{tx.description ?? '—'}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[tx.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                        {tx.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${riskColor[tx.riskScore]}`}>
+                        {tx.riskScore}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-400 text-xs">{new Date(tx.createdAt).toLocaleString()}</td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No transactions found</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </PageShell>
   )
 }

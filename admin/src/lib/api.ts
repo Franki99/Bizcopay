@@ -59,6 +59,8 @@ export const api = {
       body: JSON.stringify({ email, pin }),
     }),
 
+  getMe: () => request<User>('/api/users/me'),
+
   getUsers: () => request<User[]>('/api/users'),
 
   deactivateUser: (userId: string) =>
@@ -79,5 +81,23 @@ export const api = {
     request<NfcToken>('/api/nfc/assign', {
       method: 'POST',
       body: JSON.stringify({ userId, uid, label: label || undefined }),
+    }),
+
+  changePin: (currentPin: string, newPin: string) =>
+    request<void>('/api/auth/change-pin', {
+      method: 'POST',
+      body: JSON.stringify({ currentPin, newPin }),
+    }),
+
+  sendChangeEmailOtp: (newEmail: string) =>
+    request<void>('/api/auth/send-change-email-otp', {
+      method: 'POST',
+      body: JSON.stringify({ newEmail }),
+    }),
+
+  changeEmail: (newEmail: string, otpCode: string) =>
+    request<void>('/api/auth/change-email', {
+      method: 'POST',
+      body: JSON.stringify({ newEmail, otpCode }),
     }),
 }

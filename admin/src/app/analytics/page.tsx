@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { api, Transaction } from '@/lib/api'
-import { isLoggedIn } from '@/lib/auth'
-import Sidebar from '@/components/Sidebar'
+import PageShell from '@/components/PageShell'
 import type { ChartProps } from './_Charts'
 
 const Charts = dynamic<ChartProps>(
@@ -15,8 +14,7 @@ const Charts = dynamic<ChartProps>(
     loading: () => (
       <div className="mt-6 space-y-6">
         {[220, 200, 200].map((h, i) => (
-          <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6"
-            style={{ height: h + 56 }}>
+          <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6" style={{ height: h + 56 }}>
             <div className="h-3 w-48 bg-gray-100 rounded mb-4" />
             <div className="bg-gray-50 rounded-lg animate-pulse" style={{ height: h }} />
           </div>
@@ -32,18 +30,11 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!isLoggedIn()) { router.push('/login'); return }
     api.getTransactions()
       .then(setTransactions)
       .catch(() => router.push('/login'))
       .finally(() => setLoading(false))
   }, [router])
-
-  if (loading) return (
-    <div className="flex min-h-screen items-center justify-center">
-      <p className="text-gray-400">Loading…</p>
-    </div>
-  )
 
   const approved = transactions.filter(t => t.status === 'APPROVED')
   const failed = transactions.filter(t => t.status === 'FAILED')
@@ -61,24 +52,31 @@ export default function AnalyticsPage() {
   ]
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
-        <p className="text-sm text-gray-500 mt-1">Transaction insights across all time</p>
-
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
-          {kpis.map(k => (
-            <div key={k.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-              <p className="text-sm text-gray-500 font-medium">{k.label}</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{k.value}</p>
-              <p className="text-xs text-gray-400 mt-1">{k.sub}</p>
-            </div>
-          ))}
+    <PageShell>
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
         </div>
+      ) : (
+        <>
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
+            <p className="text-sm text-gray-500 mt-1">Transaction insights across all time</p>
+          </div>
 
-        <Charts transactions={transactions} />
-      </main>
-    </div>
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            {kpis.map(k => (
+              <div key={k.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <p className="text-sm text-gray-500 font-medium">{k.label}</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{k.value}</p>
+                <p className="text-xs text-gray-400 mt-1">{k.sub}</p>
+              </div>
+            ))}
+          </div>
+
+          <Charts transactions={transactions} />
+        </>
+      )}
+    </PageShell>
   )
 }
