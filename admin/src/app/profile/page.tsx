@@ -261,17 +261,9 @@ export default function ProfilePage() {
           {/* Change Email */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <h3 className="text-base font-semibold text-gray-800 mb-1">Change Email</h3>
-            <p className="text-xs text-gray-400 mb-1">
+            <p className="text-xs text-gray-400 mb-5">
               An OTP will be sent to your <span className="font-medium text-gray-600">current email</span> to verify the change.
             </p>
-            <div className="flex items-start gap-2 mb-5 p-3 bg-blue-50 rounded-lg">
-              <svg className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-xs text-blue-700">
-                If email is not configured, the OTP code is printed in the <span className="font-mono font-semibold">backend terminal</span> instead.
-              </p>
-            </div>
 
             <form onSubmit={email.otpSent ? handleEmailChange : handleSendOtp} className="space-y-4">
               <div>
