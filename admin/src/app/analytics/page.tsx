@@ -24,6 +24,33 @@ const Charts = dynamic<ChartProps>(
   }
 )
 
+function exportCSV(transactions: Transaction[]) {
+  const headers = ['Date', 'Merchant', 'Payer', 'Amount (RWF)', 'Currency', 'Status', 'Risk Score', 'Fraud Rule', 'Description']
+  const rows = transactions.map(tx => [
+    new Date(tx.createdAt).toLocaleString(),
+    tx.merchant.name,
+    tx.payer?.name ?? '',
+    tx.amount,
+    tx.currency,
+    tx.status,
+    tx.riskScore,
+    tx.fraudLog?.ruleTriggered ?? '',
+    tx.description ?? '',
+  ])
+
+  const csv = [headers, ...rows]
+    .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    .join('\n')
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url  = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `bizcopay-report-${new Date().toISOString().slice(0, 10)}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function AnalyticsPage() {
   const router = useRouter()
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -59,9 +86,21 @@ export default function AnalyticsPage() {
         </div>
       ) : (
         <>
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
-            <p className="text-sm text-gray-500 mt-1">Transaction insights across all time</p>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
+              <p className="text-sm text-gray-500 mt-1">Transaction insights across all time</p>
+            </div>
+            <button
+              onClick={() => exportCSV(transactions)}
+              disabled={transactions.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export CSV
+            </button>
           </div>
 
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
