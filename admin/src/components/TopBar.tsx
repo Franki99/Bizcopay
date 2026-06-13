@@ -60,22 +60,22 @@ export default function TopBar({ user }: Props) {
       <div className="relative" ref={ref}>
         <button
           onClick={() => setOpen(o => !o)}
-          className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-gray-50 transition-colors"
+          className={`flex items-center gap-3 rounded-xl border px-3 py-2 transition-colors ${
+            open ? 'bg-gray-50 border-blue-200' : 'bg-white border-gray-200 hover:border-blue-200 hover:bg-gray-50'
+          }`}
         >
-          <div className="relative">
-            {avatar ? (
-              <img src={avatar} alt="avatar" className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-100" />
-            ) : (
-              <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
-                {initials(user?.name)}
-              </div>
-            )}
-          </div>
+          {avatar ? (
+            <img src={avatar} alt="avatar" className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-100 shrink-0" />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
+              {initials(user?.name)}
+            </div>
+          )}
           <div className="text-left hidden sm:block">
             <p className="text-sm font-semibold text-gray-900 leading-tight">{user?.name ?? '…'}</p>
-            <p className="text-xs text-gray-400 leading-tight">{user?.role ?? ''}</p>
+            <p className="text-xs text-gray-400 leading-tight capitalize">{user?.role?.toLowerCase() ?? ''}</p>
           </div>
-          <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
