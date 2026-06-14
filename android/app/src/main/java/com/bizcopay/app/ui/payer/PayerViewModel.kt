@@ -57,6 +57,10 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
     private val _tokens = MutableStateFlow<List<NfcTokenResponse>>(emptyList())
     val tokens: StateFlow<List<NfcTokenResponse>> = _tokens
 
+    private val _deactivateError = MutableStateFlow<String?>(null)
+    val deactivateError: StateFlow<String?> = _deactivateError
+    fun clearDeactivateError() { _deactivateError.value = null }
+
     private val _transactions = MutableStateFlow<List<TransactionResponse>>(emptyList())
     val transactions: StateFlow<List<TransactionResponse>> = _transactions
 
@@ -104,8 +108,16 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
                 val response = api.deactivateNfcToken(tokenId)
                 if (response.isSuccessful) {
                     _tokens.value = _tokens.value.filter { it.id != tokenId }
+                } else {
+                    _deactivateError.value = when (response.code()) {
+                        401 -> "Session expired. Please log out and log in again."
+                        404 -> "Device not found on this account."
+                        else -> "Failed to remove device (error ${response.code()})."
+                    }
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                _deactivateError.value = "Network error: ${e.message ?: "unknown"}"
+            }
         }
     }
 

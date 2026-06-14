@@ -53,6 +53,8 @@ fun PayerNfcDevicesScreen(viewModel: PayerViewModel, onBack: (() -> Unit)? = nul
     var selectedDevice by remember { mutableStateOf<NfcTokenResponse?>(null) }
     var refreshKey by remember { mutableStateOf(0) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var pendingDelete by remember { mutableStateOf<NfcTokenResponse?>(null) }
+    val deactivateError by viewModel.deactivateError.collectAsState()
 
     LaunchedEffect(Unit) { NfcDeviceTypeStore.init(context) }
 
@@ -205,13 +207,66 @@ fun PayerNfcDevicesScreen(viewModel: PayerViewModel, onBack: (() -> Unit)? = nul
             info = currentInfo,
             onDismiss = { selectedDevice = null },
             onDelete = {
-                viewModel.deactivateToken(token.id)
-                NfcDeviceTypeStore.remove(token.uid)
+                pendingDelete = token
                 selectedDevice = null
             },
             onRename = { label ->
                 NfcDeviceTypeStore.updateLabel(token.uid, label)
                 refreshKey++
+            }
+        )
+    }
+
+    // Delete confirmation dialog
+    pendingDelete?.let { token ->
+        val name = NfcDeviceTypeStore.getInfo(token.uid).customLabel ?: token.label ?: "this device"
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            containerColor = BizcoCard,
+            title = {
+                Text("Remove Device", color = BizcoTextPrimary, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text(
+                    "Remove \"$name\" from your account? You can re-register it later.",
+                    color = BizcoTextSecondary,
+                    fontSize = 14.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deactivateToken(token.id)
+                        NfcDeviceTypeStore.remove(token.uid)
+                        pendingDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = BizcoError)
+                ) { Text("Remove", color = Color.White) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDelete = null }) {
+                    Text("Cancel", color = BizcoTextSecondary)
+                }
+            }
+        )
+    }
+
+    // Deactivation error dialog
+    deactivateError?.let { msg ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearDeactivateError() },
+            containerColor = BizcoCard,
+            title = {
+                Text("Removal Failed", color = BizcoTextPrimary, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text(msg, color = BizcoTextSecondary, fontSize = 14.sp)
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.clearDeactivateError() },
+                    colors = ButtonDefaults.buttonColors(containerColor = BizcoBlue)
+                ) { Text("OK") }
             }
         )
     }
