@@ -64,8 +64,11 @@ fun PayerHomeScreen(
     val name    = remember { TokenManager(context).getName() ?: "User" }
     val greeting = remember { timeBasedGreeting() }
     val profilePicUri = remember { TokenManager(context).getProfilePicUri() }
+    val topUpRequests   by viewModel.topUpRequests.collectAsState()
+    val topUpSubmit     by viewModel.topUpSubmitState.collectAsState()
     val recentTxs = transactions.take(3)
-    var showNotifications by remember { mutableStateOf(false) }
+    var showNotifications  by remember { mutableStateOf(false) }
+    var showTopUpSheet     by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -205,6 +208,23 @@ fun PayerHomeScreen(
                                 )
                             }
                         }
+
+                        Spacer(Modifier.height(16.dp))
+                        Button(
+                            onClick = { showTopUpSheet = true },
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White.copy(alpha = 0.18f)
+                            )
+                        ) {
+                            Text(
+                                "+ Request Top-Up",
+                                color = BizcoOnDark,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp
+                            )
+                        }
                     }
                 }
             }
@@ -254,6 +274,17 @@ fun PayerHomeScreen(
         // Notifications sheet
         if (showNotifications) {
             NotificationsSheet(onDismiss = { showNotifications = false })
+        }
+
+        // Top-Up Request sheet
+        if (showTopUpSheet) {
+            TopUpRequestSheet(
+                submitState = topUpSubmit,
+                myRequests = topUpRequests,
+                onSubmit = { amount, note -> viewModel.submitTopUpRequest(amount, note) },
+                onDismiss = { showTopUpSheet = false },
+                onClearState = { viewModel.clearTopUpSubmitState() }
+            )
         }
 
         // Payment result overlay

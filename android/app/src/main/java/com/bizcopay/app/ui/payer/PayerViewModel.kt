@@ -9,6 +9,8 @@ import com.bizcopay.app.data.network.models.CategoryRequest
 import com.bizcopay.app.data.network.models.NfcTokenResponse
 import com.bizcopay.app.data.network.models.PayerAnalyticsResponse
 import com.bizcopay.app.data.network.models.RegisterNfcTokenRequest
+import com.bizcopay.app.data.network.models.TopUpRequestBody
+import com.bizcopay.app.data.network.models.TopUpRequestResponse
 import com.bizcopay.app.data.network.models.TransactionResponse
 import com.bizcopay.app.data.network.models.WalletResponse
 import com.bizcopay.app.data.nfc.NfcEventBus
@@ -21,6 +23,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+
+sealed class TopUpSubmitState {
+    object Idle : TopUpSubmitState()
+    object Loading : TopUpSubmitState()
+    data class Success(val amount: String) : TopUpSubmitState()
+    data class Error(val message: String) : TopUpSubmitState()
+}
 
 sealed class PayerState {
     object Idle : PayerState()
@@ -61,6 +70,13 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
     val deactivateError: StateFlow<String?> = _deactivateError
     fun clearDeactivateError() { _deactivateError.value = null }
 
+    private val _topUpRequests = MutableStateFlow<List<TopUpRequestResponse>>(emptyList())
+    val topUpRequests: StateFlow<List<TopUpRequestResponse>> = _topUpRequests
+
+    private val _topUpSubmitState = MutableStateFlow<TopUpSubmitState>(TopUpSubmitState.Idle)
+    val topUpSubmitState: StateFlow<TopUpSubmitState> = _topUpSubmitState
+    fun clearTopUpSubmitState() { _topUpSubmitState.value = TopUpSubmitState.Idle }
+
     private val _transactions = MutableStateFlow<List<TransactionResponse>>(emptyList())
     val transactions: StateFlow<List<TransactionResponse>> = _transactions
 
@@ -81,6 +97,7 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
         loadTokens()
         loadTransactions()
         loadAnalytics()
+        loadMyTopUpRequests()
         connectSocket()
     }
 
@@ -244,6 +261,40 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
     fun resetRegistration() {
         nfcReadJob?.cancel()
         _registrationState.value = NfcRegistrationState.Idle
+    }
+
+    // ── Top-Up Requests ───────────────────────────────────────────────────────
+
+    fun loadMyTopUpRequests() {
+        viewModelScope.launch {
+            try {
+                val r = api.getMyTopUpRequests()
+                if (r.isSuccessful) _topUpRequests.value = r.body() ?: emptyList()
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun submitTopUpRequest(amount: Double, note: String?) {
+        _topUpSubmitState.value = TopUpSubmitState.Loading
+        viewModelScope.launch {
+            try {
+                val r = api.createTopUpRequest(TopUpRequestBody(amount = amount, note = note?.ifBlank { null }))
+                if (r.isSuccessful) {
+                    loadMyTopUpRequests()
+                    _topUpSubmitState.value = TopUpSubmitState.Success("RWF ${"%,.0f".format(amount)}")
+                } else {
+                    _topUpSubmitState.value = TopUpSubmitState.Error(
+                        when (r.code()) {
+                            400 -> "Invalid amount."
+                            401 -> "Session expired. Please log in again."
+                            else -> "Failed to submit request (${r.code()})."
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                _topUpSubmitState.value = TopUpSubmitState.Error("Network error: ${e.message ?: "unknown"}")
+            }
+        }
     }
 
     override fun onCleared() {

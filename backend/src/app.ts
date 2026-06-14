@@ -11,6 +11,7 @@ import walletRoutes from './modules/wallets/wallet.routes'
 import nfcRoutes from './modules/nfc/nfc.routes'
 import transactionRoutes from './modules/transactions/transaction.routes'
 import analyticsRoutes from './modules/analytics/analytics.routes'
+import topupRoutes from './modules/topup/topup.routes'
 
 const app = express()
 
@@ -28,6 +29,7 @@ app.use('/api/wallets', walletRoutes)
 app.use('/api/nfc', nfcRoutes)
 app.use('/api/transactions', transactionRoutes)
 app.use('/api/analytics', analyticsRoutes)
+app.use('/api/topup', topupRoutes)
 
 app.use(errorHandler)
 

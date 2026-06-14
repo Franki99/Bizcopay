@@ -52,6 +52,15 @@ export interface NfcToken {
   isActive: boolean
 }
 
+export interface TopUpRequest {
+  id: string
+  amount: string
+  note: string | null
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  createdAt: string
+  user: { id: string; name: string; email: string }
+}
+
 export const api = {
   login: (email: string, pin: string) =>
     request<{ user: User; token: string }>('/api/auth/login', {
@@ -109,4 +118,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ newEmail, otpCode }),
     }),
+
+  getTopUpRequests: () => request<TopUpRequest[]>('/api/topup'),
+
+  approveTopUp: (id: string) =>
+    request<TopUpRequest>(`/api/topup/${id}/approve`, { method: 'POST' }),
+
+  rejectTopUp: (id: string) =>
+    request<TopUpRequest>(`/api/topup/${id}/reject`, { method: 'POST' }),
 }

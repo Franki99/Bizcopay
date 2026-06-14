@@ -68,4 +68,10 @@ interface ApiService {
 
     @PATCH("api/nfc/{id}/deactivate")
     suspend fun deactivateNfcToken(@Path("id") id: String): Response<NfcTokenResponse>
+
+    @POST("api/topup")
+    suspend fun createTopUpRequest(@Body body: TopUpRequestBody): Response<TopUpRequestResponse>
+
+    @GET("api/topup/mine")
+    suspend fun getMyTopUpRequests(): Response<List<TopUpRequestResponse>>
 }
