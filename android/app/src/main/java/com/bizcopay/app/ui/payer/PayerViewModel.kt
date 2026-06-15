@@ -208,6 +208,7 @@ class PayerViewModel(application: Application) : AndroidViewModel(application) {
                 val amount = data.optString("amount", "?")
                 val balance = data.optString("balance", "")
                 loadWallet()
+                loadMyTopUpRequests()
                 TopUpStore.add(amount, balance)
                 NotificationHelper.showWalletToppedUp(ctx, amount)
                 NotificationStore.add("Wallet Topped Up", "RWF $amount has been added to your wallet", "wallet")
