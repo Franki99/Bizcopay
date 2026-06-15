@@ -52,6 +52,10 @@ export interface NfcToken {
   isActive: boolean
 }
 
+export interface UserDetail extends User {
+  nfcTokens: { id: string; uid: string; label: string | null; isActive: boolean }[]
+}
+
 export interface TopUpRequest {
   id: string
   amount: string
@@ -118,6 +122,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ newEmail, otpCode }),
     }),
+
+  getUserById: (id: string) => request<UserDetail>(`/api/users/${id}`),
+  getUserTransactions: (id: string) => request<Transaction[]>(`/api/transactions/user/${id}`),
+  getUserTopUpRequests: (id: string) => request<TopUpRequest[]>(`/api/topup/user/${id}`),
 
   getTopUpRequests: () => request<TopUpRequest[]>('/api/topup'),
 

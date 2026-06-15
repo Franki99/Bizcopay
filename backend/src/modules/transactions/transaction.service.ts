@@ -135,6 +135,18 @@ export async function getTransactions(userId: string, role: string) {
   })
 }
 
+export async function getTransactionsByUser(userId: string) {
+  return prisma.transaction.findMany({
+    where: { OR: [{ payerId: userId }, { merchantId: userId }] },
+    include: {
+      payer: { select: { id: true, name: true, email: true } },
+      merchant: { select: { id: true, name: true, email: true } },
+      fraudLog: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  })
+}
+
 async function processPayment(
   transactionId: string,
   payerId: string,

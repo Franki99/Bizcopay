@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { api, User } from '@/lib/api'
 import PageShell from '@/components/PageShell'
 import TopUpModal from '@/components/TopUpModal'
@@ -195,7 +196,10 @@ export default function UsersPage() {
                           {user.name[0].toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-semibold text-gray-900 truncate">{user.name}</p>
+                          <Link href={`/users/${user.id}`}
+                            className="font-semibold text-gray-900 hover:text-blue-600 hover:underline truncate block transition-colors">
+                            {user.name}
+                          </Link>
                           <p className="text-xs text-gray-400 truncate">{user.email}</p>
                         </div>
                       </div>

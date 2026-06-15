@@ -20,6 +20,12 @@ export async function getMyRequests(req: Request, res: Response, next: NextFunct
   } catch (err) { next(err) }
 }
 
+export async function getByUser(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json(await topupService.getRequestsByUser(req.params.userId))
+  } catch (err) { next(err) }
+}
+
 export async function approveRequest(req: Request, res: Response, next: NextFunction) {
   try {
     res.json(await topupService.approveRequest(req.params.id))

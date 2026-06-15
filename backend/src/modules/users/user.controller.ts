@@ -27,6 +27,14 @@ export async function getAllUsers(_req: Request, res: Response, next: NextFuncti
   }
 }
 
+export async function getById(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json(await userService.getUserById(req.params.id))
+  } catch (err) {
+    next(err)
+  }
+}
+
 export async function deactivateUser(req: Request, res: Response, next: NextFunction) {
   try {
     await userService.deactivateUser(req.params.id)

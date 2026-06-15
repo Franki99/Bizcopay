@@ -53,6 +53,12 @@ export async function categorize(req: Request, res: Response, next: NextFunction
   } catch (err) { next(err) }
 }
 
+export async function getByUser(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json(await transactionService.getTransactionsByUser(req.params.userId))
+  } catch (err) { next(err) }
+}
+
 export async function exportCsv(req: Request, res: Response, next: NextFunction) {
   try {
     const csv = await transactionService.exportTransactionsCsv(req.user!.userId, req.user!.role)

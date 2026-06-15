@@ -28,6 +28,16 @@ export async function updateMe(userId: string, name: string) {
   return rest
 }
 
+export async function getUserById(id: string) {
+  const user = await prisma.user.findUnique({
+    where: { id },
+    include: { wallet: true, nfcTokens: { where: { isActive: true } } },
+  })
+  if (!user) throw new AppError(404, 'User not found')
+  const { pin: _pin, ...rest } = user
+  return rest
+}
+
 export async function deactivateUser(userId: string) {
   return prisma.user.update({ where: { id: userId }, data: { isActive: false } })
 }

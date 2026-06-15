@@ -31,6 +31,14 @@ export async function getMyRequests(userId: string) {
   })
 }
 
+export async function getRequestsByUser(userId: string) {
+  return prisma.topUpRequest.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    include: { user: { select: { id: true, name: true, email: true } } },
+  })
+}
+
 export async function approveRequest(requestId: string) {
   const req = await prisma.topUpRequest.findUnique({ where: { id: requestId } })
   if (!req) throw new AppError(404, 'Request not found')

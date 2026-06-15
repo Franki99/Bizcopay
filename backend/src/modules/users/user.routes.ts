@@ -10,6 +10,7 @@ router.use(authenticate)
 router.get('/me', userController.getMe)
 router.patch('/me', userController.updateMe)
 router.get('/', requireRole(Role.ADMIN), userController.getAllUsers)
+router.get('/:id', requireRole(Role.ADMIN), userController.getById)
 router.patch('/:id/deactivate', requireRole(Role.ADMIN), userController.deactivateUser)
 
 export default router
