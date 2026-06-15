@@ -75,7 +75,7 @@ fun TopUpRequestSheet(
                 }
             }
 
-            HorizontalDivider(color = Color.Gray.copy(alpha = 0.12f))
+            Divider(color = Color.Gray.copy(alpha = 0.12f))
 
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
