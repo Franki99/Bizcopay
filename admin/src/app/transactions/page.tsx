@@ -63,21 +63,35 @@ function exportCSV(rows: Transaction[]) {
   URL.revokeObjectURL(url)
 }
 
+function RefreshButton({ refreshing, onClick }: { refreshing: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick} disabled={refreshing}
+      className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 bg-white rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-colors shadow-sm">
+      <svg className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      {refreshing ? 'Refreshing…' : 'Refresh'}
+    </button>
+  )
+}
+
 export default function TransactionsPage() {
   const router = useRouter()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading,      setLoading]      = useState(true)
+  const [refreshing,   setRefreshing]   = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
   const [riskFilter,   setRiskFilter]   = useState<RiskFilter>('ALL')
   const [search,       setSearch]       = useState('')
   const [page,         setPage]         = useState(1)
 
-  useEffect(() => {
-    api.getTransactions()
-      .then(setTransactions)
-      .catch(() => router.push('/login'))
-      .finally(() => setLoading(false))
-  }, [router])
+  async function load(refresh = false) {
+    if (refresh) setRefreshing(true)
+    try { setTransactions(await api.getTransactions()) }
+    catch { router.push('/login') }
+    finally { setLoading(false); setRefreshing(false) }
+  }
+  useEffect(() => { load() }, [])
 
   const filtered = transactions.filter(tx => {
     if (statusFilter !== 'ALL' && tx.status !== statusFilter) return false
@@ -139,16 +153,19 @@ export default function TransactionsPage() {
               <h2 className="text-2xl font-bold text-gray-900">Transactions</h2>
               <p className="text-sm text-gray-500 mt-1">{transactions.length} total · {fraudFlag.length} flagged</p>
             </div>
-            <button
-              onClick={() => exportCSV(filtered)}
-              disabled={filtered.length === 0}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Export CSV
-            </button>
+            <div className="flex gap-2">
+              <RefreshButton refreshing={refreshing} onClick={() => load(true)} />
+              <button
+                onClick={() => exportCSV(filtered)}
+                disabled={filtered.length === 0}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export CSV
+              </button>
+            </div>
           </div>
 
           {/* Stat cards */}

@@ -6,6 +6,18 @@ import Link from 'next/link'
 import { api, Transaction, User } from '@/lib/api'
 import PageShell from '@/components/PageShell'
 
+function RefreshButton({ refreshing, onClick }: { refreshing: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick} disabled={refreshing}
+      className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 bg-white rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-colors shadow-sm">
+      <svg className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      {refreshing ? 'Refreshing…' : 'Refresh'}
+    </button>
+  )
+}
+
 // ─── Mini sparkline (pure SVG, no library) ───────────────────────────────────
 function Sparkline({ values, stroke }: { values: number[]; stroke: string }) {
   if (values.length < 2 || values.every(v => v === 0)) return <div className="w-24 h-10" />
@@ -94,13 +106,17 @@ export default function DashboardPage() {
   const [users,        setUsers]        = useState<User[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading,      setLoading]      = useState(true)
+  const [refreshing,   setRefreshing]   = useState(false)
 
-  useEffect(() => {
-    Promise.all([api.getUsers(), api.getTransactions()])
-      .then(([u, t]) => { setUsers(u); setTransactions(t) })
-      .catch(() => router.push('/login'))
-      .finally(() => setLoading(false))
-  }, [router])
+  async function load(refresh = false) {
+    if (refresh) setRefreshing(true)
+    try {
+      const [u, t] = await Promise.all([api.getUsers(), api.getTransactions()])
+      setUsers(u); setTransactions(t)
+    } catch { router.push('/login') }
+    finally { setLoading(false); setRefreshing(false) }
+  }
+  useEffect(() => { load() }, [])
 
   const days     = last7Days()
   const approved = transactions.filter(t => t.status === 'APPROVED')
@@ -180,9 +196,12 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-            <p className="text-sm text-gray-500 mt-1">System overview · last 7 days sparklines</p>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
+              <p className="text-sm text-gray-500 mt-1">System overview · last 7 days sparklines</p>
+            </div>
+            <RefreshButton refreshing={refreshing} onClick={() => load(true)} />
           </div>
 
           {/* KPI cards */}

@@ -29,18 +29,32 @@ const statusColor: Record<string, string> = {
   EXPIRED:      'bg-gray-100 text-gray-500',
 }
 
+function RefreshButton({ refreshing, onClick }: { refreshing: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick} disabled={refreshing}
+      className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 bg-white rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-colors shadow-sm">
+      <svg className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      {refreshing ? 'Refreshing…' : 'Refresh'}
+    </button>
+  )
+}
+
 export default function FraudPage() {
   const router = useRouter()
-  const [flagged, setFlagged] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
+  const [flagged,    setFlagged]    = useState<Transaction[]>([])
+  const [loading,    setLoading]    = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [riskFilter, setRiskFilter] = useState<RiskFilter>('ALL')
 
-  useEffect(() => {
-    api.getTransactions()
-      .then(txs => setFlagged(txs.filter(t => t.fraudLog)))
-      .catch(() => router.push('/login'))
-      .finally(() => setLoading(false))
-  }, [router])
+  async function load(refresh = false) {
+    if (refresh) setRefreshing(true)
+    try { setFlagged((await api.getTransactions()).filter(t => t.fraudLog)) }
+    catch { router.push('/login') }
+    finally { setLoading(false); setRefreshing(false) }
+  }
+  useEffect(() => { load() }, [])
 
   const high   = flagged.filter(t => t.fraudLog!.riskScore === 'HIGH')
   const medium = flagged.filter(t => t.fraudLog!.riskScore === 'MEDIUM')
@@ -87,11 +101,14 @@ export default function FraudPage() {
         </div>
       ) : (
         <>
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Fraud Alerts</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {flagged.length} transaction{flagged.length !== 1 ? 's' : ''} flagged by the fraud engine
-            </p>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Fraud Alerts</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                {flagged.length} transaction{flagged.length !== 1 ? 's' : ''} flagged by the fraud engine
+              </p>
+            </div>
+            <RefreshButton refreshing={refreshing} onClick={() => load(true)} />
           </div>
 
           {/* Stat cards */}

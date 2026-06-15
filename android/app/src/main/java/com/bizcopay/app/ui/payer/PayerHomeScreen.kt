@@ -70,6 +70,10 @@ fun PayerHomeScreen(
     var showNotifications  by remember { mutableStateOf(false) }
     var showTopUpSheet     by remember { mutableStateOf(false) }
 
+    LaunchedEffect(showTopUpSheet) {
+        if (showTopUpSheet) viewModel.loadMyTopUpRequests()
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(BizcoBackground)) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             // Gradient header
