@@ -7,7 +7,7 @@ import { isLoggedIn, clearToken } from '@/lib/auth'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 
-const SESSION_TIMEOUT_MS = 2 * 60 * 1000   // 2 minutes
+const SESSION_TIMEOUT_MS = 10 * 60 * 1000  // 10 minutes
 const WARN_BEFORE_MS     = 30 * 1000        // warn 30 s before expiry
 const CHECK_INTERVAL_MS  = 5 * 1000         // check every 5 s
 

@@ -30,12 +30,18 @@ class TokenManager(context: Context) {
     fun isLoggedIn() = getToken() != null
     fun clear() = prefs.edit().clear().apply()
 
+    // Background-time tracking for idle session timeout
+    fun saveBackgroundTime(t: Long)  = prefs.edit().putLong(KEY_BG_TIME, t).apply()
+    fun getBackgroundTime(): Long    = prefs.getLong(KEY_BG_TIME, 0L)
+    fun clearBackgroundTime()        = prefs.edit().remove(KEY_BG_TIME).apply()
+
     companion object {
-        private const val KEY_TOKEN = "jwt_token"
-        private const val KEY_USER_ID = "user_id"
-        private const val KEY_ROLE = "user_role"
-        private const val KEY_NAME = "user_name"
-        private const val KEY_EMAIL = "user_email"
+        private const val KEY_TOKEN       = "jwt_token"
+        private const val KEY_USER_ID     = "user_id"
+        private const val KEY_ROLE        = "user_role"
+        private const val KEY_NAME        = "user_name"
+        private const val KEY_EMAIL       = "user_email"
         private const val KEY_PROFILE_PIC = "profile_pic_uri"
+        private const val KEY_BG_TIME     = "bg_time"
     }
 }

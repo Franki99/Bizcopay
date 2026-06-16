@@ -13,6 +13,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
+import com.bizcopay.app.data.local.SessionManager
 import com.bizcopay.app.data.local.TokenManager
 import com.bizcopay.app.data.nfc.NfcEventBus
 import com.bizcopay.app.data.notification.NotificationHelper
@@ -24,6 +25,11 @@ class MainActivity : ComponentActivity() {
 
     private var nfcAdapter: NfcAdapter? = null
     private lateinit var nfcPendingIntent: PendingIntent
+    private lateinit var tokenManager: TokenManager
+
+    companion object {
+        private const val SESSION_TIMEOUT_MS = 2 * 60 * 1000L  // 2 minutes
+    }
 
     private val requestNotificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
@@ -31,6 +37,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        tokenManager = TokenManager(this)
         NotificationHelper.createChannels(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -46,7 +53,6 @@ class MainActivity : ComponentActivity() {
             PendingIntent.FLAG_MUTABLE
         )
 
-        val tokenManager = TokenManager(this)
         val startDestination = when {
             !tokenManager.isLoggedIn() -> Screen.Splash.route
             tokenManager.getRole() == "MERCHANT" -> Screen.Merchant.route
@@ -60,6 +66,28 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    // ── Session timeout ────────────────────────────────────────────────────────
+
+    override fun onStop() {
+        super.onStop()
+        // Record when the app went to background (only while a user is logged in)
+        if (tokenManager.isLoggedIn()) {
+            tokenManager.saveBackgroundTime(System.currentTimeMillis())
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val bg = tokenManager.getBackgroundTime()
+        if (bg > 0L && System.currentTimeMillis() - bg > SESSION_TIMEOUT_MS) {
+            tokenManager.clear()
+            SessionManager.triggerExpiry()
+        }
+        tokenManager.clearBackgroundTime()
+    }
+
+    // ── NFC ────────────────────────────────────────────────────────────────────
 
     override fun onResume() {
         super.onResume()
