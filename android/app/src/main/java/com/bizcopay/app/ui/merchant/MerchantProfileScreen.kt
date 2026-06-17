@@ -1,5 +1,6 @@
 package com.bizcopay.app.ui.merchant
 
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -64,7 +65,7 @@ fun MerchantProfileScreen(rootNavController: NavController, viewModel: MerchantV
                 onFAQs = { dest = MerchantProfileDest.FAQs },
                 onLogout = {
                     viewModel.reset()
-                    tokenManager.clear()
+                    tokenManager.clearAuth()
                     rootNavController.navigate(Screen.Login.route) { popUpTo(0) }
                 }
             )
@@ -85,7 +86,15 @@ private fun MerchantProfileMain(
     var profilePicUri by remember { mutableStateOf(tokenManager.getProfilePicUri()) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { tokenManager.saveProfilePicUri(it.toString()); profilePicUri = it.toString() }
+        uri?.let {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    it, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: SecurityException) { /* some providers don't support persistable grants */ }
+            tokenManager.saveProfilePicUri(it.toString())
+            profilePicUri = it.toString()
+        }
     }
 
     LazyColumn(

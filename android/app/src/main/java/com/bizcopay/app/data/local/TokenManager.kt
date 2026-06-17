@@ -28,6 +28,19 @@ class TokenManager(context: Context) {
     fun saveProfilePicUri(uri: String) = prefs.edit().putString(KEY_PROFILE_PIC, uri).apply()
     fun getProfilePicUri(): String? = prefs.getString(KEY_PROFILE_PIC, null)
     fun isLoggedIn() = getToken() != null
+
+    // Clears only auth/session data — profile picture is intentionally kept
+    // so it survives logout/login cycles on the same device.
+    fun clearAuth() = prefs.edit()
+        .remove(KEY_TOKEN)
+        .remove(KEY_USER_ID)
+        .remove(KEY_ROLE)
+        .remove(KEY_NAME)
+        .remove(KEY_EMAIL)
+        .remove(KEY_BG_TIME)
+        .apply()
+
+    // Hard reset (e.g. account deletion) — wipes everything including the pic
     fun clear() = prefs.edit().clear().apply()
 
     // Background-time tracking for idle session timeout

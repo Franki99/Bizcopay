@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
         super.onStart()
         val bg = tokenManager.getBackgroundTime()
         if (bg > 0L && System.currentTimeMillis() - bg > SESSION_TIMEOUT_MS) {
-            tokenManager.clear()
+            tokenManager.clearAuth()
             SessionManager.triggerExpiry()
         }
         tokenManager.clearBackgroundTime()

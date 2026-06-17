@@ -1,5 +1,6 @@
 package com.bizcopay.app.ui.payer
 
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -69,7 +70,7 @@ fun PayerProfileScreen(rootNavController: NavController, viewModel: PayerViewMod
                 onGetInTouch = { dest = PayerProfileDest.GetInTouch },
                 onFAQs = { dest = PayerProfileDest.FAQs },
                 onLogout = {
-                    tokenManager.clear()
+                    tokenManager.clearAuth()
                     rootNavController.navigate(Screen.Login.route) { popUpTo(0) }
                 }
             )
@@ -90,7 +91,17 @@ private fun PayerProfileMain(
     var profilePicUri by remember { mutableStateOf(tokenManager.getProfilePicUri()) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { tokenManager.saveProfilePicUri(it.toString()); profilePicUri = it.toString() }
+        uri?.let {
+            // Take a persistent read permission so the URI stays accessible after
+            // app restarts without requiring the user to re-pick the image.
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    it, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: SecurityException) { /* some providers don't support persistable grants */ }
+            tokenManager.saveProfilePicUri(it.toString())
+            profilePicUri = it.toString()
+        }
     }
 
     LazyColumn(
