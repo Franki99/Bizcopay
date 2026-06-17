@@ -86,6 +86,7 @@ private fun PayerProfileMain(
     onFAQs: () -> Unit,
     onLogout: () -> Unit,
 ) {
+    val context = LocalContext.current
     val name = tokenManager.getName() ?: "User"
     val email = tokenManager.getEmail() ?: ""
     var profilePicUri by remember { mutableStateOf(tokenManager.getProfilePicUri()) }
