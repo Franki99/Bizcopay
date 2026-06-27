@@ -7,9 +7,7 @@ import org.json.JSONObject
 class SocketManager(private val token: String) {
     private lateinit var socket: Socket
 
-    // localhost:3000 works on physical device via: adb reverse tcp:3000 tcp:3000
-    // 10.0.2.2:3000 is the alias used on the Android emulator
-    fun connect(serverUrl: String = "http://localhost:3000") {
+    fun connect(serverUrl: String = com.bizcopay.app.data.network.NetworkConfig.SERVER_URL) {
         val options = IO.Options.builder()
             .setAuth(mapOf("token" to token))
             .build()

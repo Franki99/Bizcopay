@@ -7,9 +7,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiClient {
-    // 10.0.2.2        → emulator alias for host localhost (use on emulator)
-    // localhost:3000  → physical device via  adb reverse tcp:3000 tcp:3000
-    private const val BASE_URL = "http://localhost:3000/"
+    private val BASE_URL = NetworkConfig.HTTP_BASE_URL
 
     fun create(tokenManager: TokenManager? = null): ApiService {
         val client = OkHttpClient.Builder()
