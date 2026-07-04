@@ -18,7 +18,7 @@ export default function Pagination({ page, totalPages, totalItems, pageSize, onC
     if (totalPages <= 7) return all
 
     const near = new Set([1, totalPages, page - 1, page, page + 1].filter(n => n >= 1 && n <= totalPages))
-    const sorted = [...near].sort((a, b) => a - b)
+    const sorted = Array.from(near).sort((a, b) => a - b)
 
     const result: (number | '…')[] = []
     for (let i = 0; i < sorted.length; i++) {
