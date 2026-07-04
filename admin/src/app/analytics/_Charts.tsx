@@ -123,7 +123,7 @@ export default function Charts({ transactions }: ChartProps) {
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
               <Tooltip
-                formatter={(v: number) => [v, 'Transactions']}
+                formatter={(v) => [v, 'Transactions']}
                 contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
               />
               <Bar dataKey="value" radius={[4, 4, 0, 0]}>
